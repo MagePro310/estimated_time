@@ -1,0 +1,34 @@
+backend:
+  name: "fake_belem"
+  target_qubits: 5
+
+dataset:
+  source: "mqt_bench"
+  level: "indep"  # "indep" (target-independent elementary gates) or "alg" (algorithmic)
+  benchmarks:
+    - "ghz"
+    - "qft"
+    - "dj"
+    - "bv"
+    - "grover"
+    - "graphstate"
+    - "wstate"
+    - "ae"
+  qubit_range:
+    min: 2
+    max: 5
+
+ground_truth:
+  optimization_level: 1
+  scheduling_method: "asap"
+
+estimators:
+  - "analytical"
+  - "routing_aware"
+  - "ml_regressor"
+
+output:
+  dir: "data/results/default_experiment"
+  save_csv: true
+  save_plots: true
+
