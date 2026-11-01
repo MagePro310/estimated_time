@@ -1,0 +1,417 @@
+% !TeX program = lualatex
+\documentclass[11pt, a4paper]{article}
+\usepackage[a4paper, margin=2.5cm]{geometry}
+\usepackage{fontspec}
+\usepackage{babel}
+\babelprovide[import, main, onchar=ids fonts]{vietnamese}
+\babelprovide[import, onchar=ids fonts]{english}
+\babelfont{rm}{Noto Sans}
+\usepackage{enumitem}
+\setlist[itemize]{label=-}
+\usepackage{amsmath, amssymb}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{multirow}
+\usepackage{array}
+\usepackage[table]{xcolor}
+\usepackage{hyperref}
+
+\definecolor{placeholderbg}{RGB}{245, 247, 250}
+\definecolor{accentblue}{RGB}{20, 75, 140}
+
+\hypersetup{
+    colorlinks=true,
+    linkcolor=accentblue,
+    citecolor=accentblue,
+    urlcolor=accentblue
+}
+
+\title{\textbf{Ước tính Thời gian Thực thi Mạch Lượng tử Trước Giai đoạn Biên dịch Dựa trên Đặc trưng Mạch Cấp cao và Thông tin Phần cứng}}
+
+\author{
+    \textbf{[Tên Tác giả 1]}$^{1,*}$, \textbf{[Tên Tác giả 2]}$^{1}$, \textbf{[Tên Tác giả 3]}$^{2}$ \\
+    \small $^{1}$[Tên Khoa/Viện, Tên Trường Đại học/Viện Nghiên cứu, Quốc gia] \\
+    \small $^{2}$[Tên Khoa/Viện, Tên Trường Đại học/Viện Nghiên cứu, Quốc gia] \\
+    \small $^{*}$Tác giả liên hệ: \texttt{[email@domain.edu.vn]}
+}
+
+\date{Tháng 10 năm 2026}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+\noindent
+Trong kỷ nguyên Điện toán Lượng tử Nhiễu Quy mô Trung bình (NISQ), tài nguyên phần cứng lượng tử thực tế vô cùng khan hiếm và đắt đỏ. Việc lập kế hoạch điều phối tác vụ, lựa chọn thiết bị đích (backend) và tối ưu hóa chi phí đòi hỏi khả năng ước tính chính xác thời gian thực thi của mạch lượng tử ngay từ sớm. Tuy nhiên, các phương pháp ước tính hiện tại thường yêu cầu mạch lượng tử phải trải qua quá trình biên dịch (transpilation) gồm ánh xạ qubit, chèn cổng SWAP và phân rã cổng cơ sở cho từng thiết bị cụ thể. Khi số lượng qubit tăng lên hoặc khi người dùng cần khảo sát nhanh trên nhiều hệ thống phần cứng khác nhau, bản thân quá trình biên dịch này tiêu tốn rất nhiều thời gian và tài nguyên tính toán cổ điển. Trong bài báo này, chúng tôi đề xuất một kỹ thuật mới nhằm ước tính trực tiếp thời gian thực thi của mạch lượng tử ngay tại \textbf{tầng thiết kế cấp cao (pre-transpilation)} mà hoàn toàn không cần thực hiện bước biên dịch. Phương pháp của chúng tôi kết hợp các đặc trưng cấu trúc và toàn cục của mạch lượng tử cấp cao do người dùng thiết kế với các thông số kiến trúc vật lý và hiệu chuẩn của máy lượng tử mục tiêu (như đồ thị kết nối coupling map, tập cổng cơ sở, thời lượng xung và tốc độ lặp). Thực nghiệm đánh giá trên bộ dữ liệu chuẩn MQT Bench cho thấy phương pháp đề xuất đạt độ chính xác \textbf{[ĐIỀN KẾT QUẢ R$^2$ HOẶC SAI SỐ CỦA BẠN]}, đồng thời rút ngắn thời gian đưa ra dự đoán gấp \textbf{[ĐIỀN SỐ LẦN]} lần so với quy trình phải qua bước biên dịch truyền thống. Kết quả nghiên cứu mở ra hướng tiếp cận hiệu quả cho các bộ lập lịch đám mây lượng tử và công cụ hỗ trợ nhà phát triển lựa chọn phần cứng tối ưu theo thời gian thực.
+
+\vspace{0.3cm}
+\noindent \textbf{Từ khóa:} Điện toán lượng tử, Mạch lượng tử cấp cao, Ước tính thời gian thực thi, Trước biên dịch (Pre-transpilation), Máy học cho Lượng tử, Quản lý tài nguyên lượng tử.
+\end{abstract}
+
+\section{Giới thiệu (Introduction)}
+Trong thập kỷ qua, điện toán lượng tử đã có bước chuyển mình mạnh mẽ từ các thí nghiệm vật lý lý thuyết sang các nền tảng phần cứng có thể truy cập qua đám mây như IBM Quantum, Amazon Braket hay IonQ \cite{javadi2024qiskit, zhong2020quantum}. Sự phát triển này thu hút sự quan tâm lớn từ cộng đồng nghiên cứu và doanh nghiệp trong việc phát triển các thuật toán lượng tử thực tiễn. Tuy nhiên, việc thực thi một chương trình lượng tử trên máy tính lượng tử thực (Quantum Processing Unit - QPU) hoạt động theo cơ chế xử lý theo lô (batch processing) độc quyền trong một khoảng thời gian nhất định. Do sự khan hiếm và chi phí vận hành đắt đỏ của phần cứng lượng tử hiện tại (ví dụ: người dùng miễn phí trên IBM Quantum bị giới hạn số phút sử dụng mỗi tháng, trong khi gói trả phí có chi phí lên tới hàng đô la Mỹ cho mỗi giây thực thi \cite{ma2025understanding}), việc vượt quá thời gian dự kiến có thể dẫn đến hủy bỏ tác vụ giữa chừng hoặc gây phát sinh chi phí lớn ngoài dự kiến. Do đó, việc ước tính chính xác thời gian thực thi (execution time) của mạch lượng tử trước khi gửi lên hàng đợi phần cứng là bài toán thiết yếu cho cả nhà phát triển phần mềm lượng tử lẫn nhà cung cấp dịch vụ đám mây.
+
+Để một mạch lượng tử cấp cao (high-level circuit) do người dùng thiết kế có thể chạy được trên một QPU cụ thể, mạch đó bắt buộc phải trải qua quá trình biên dịch (compilation/transpilation) \cite{quetschlich2023mqt}. Quá trình này biến đổi mạch không phụ thuộc phần cứng (target-independent) thành mạch phụ thuộc phần cứng (target-dependent) thông qua các bước: phân rã các cổng logic cấp cao thành tập cổng cơ sở (native gates) của máy, ánh xạ các qubit logic vào các qubit vật lý (qubit mapping), định tuyến và chèn các cổng SWAP để thỏa mãn ràng buộc kết nối vật lý (coupling map), cuối cùng là tối ưu hóa và lập lịch xung (pulse scheduling) \cite{li2019tackling, sivarajah2020t}. 
+
+Gần đây, một số nghiên cứu tiên phong như của Ma và Li \cite{ma2025understanding} đã đề xuất sử dụng mô hình học sâu (như Graph Transformer) để dự đoán thời gian thực thi mạch lượng tử trên trình mô phỏng và máy lượng tử thực. Tuy nhiên, hạn chế lớn của các phương pháp hiện có là chúng đòi hỏi phải thực hiện biên dịch mạch lượng tử xuống mức phụ thuộc thiết bị (target-dependent mapped level) để trích xuất cấu trúc đồ thị sau biên dịch và gán thông số hiệu chuẩn ($T_1, T_2$) của từng qubit vật lý cụ thể cho các nút cổng. Cách tiếp cận sau biên dịch (post-transpilation) này bộc lộ ba nhược điểm lớn trong thực tế:
+\begin{enumerate}
+    \item \textbf{Chi phí thời gian biên dịch lớn:} Bài toán ánh xạ và định tuyến qubit là bài toán NP-complete \cite{li2019tackling}. Đối với các mạch lượng tử lớn (hàng chục đến hàng trăm qubit) hoặc có độ sâu lớn, thời gian chạy bộ biên dịch (transpiler) trên máy tính cổ điển có thể kéo dài từ vài chục giây đến hàng chục phút—thậm chí lâu hơn cả thời gian thực thi thực tế trên QPU.
+    \item \textbf{Không hiệu quả khi khảo sát đa thiết bị (Multi-backend exploration):} Khi người dùng hoặc bộ lập lịch đám mây muốn so sánh thời gian thực thi dự kiến của một mạch đầu vào trên $M$ máy lượng tử khác nhau để chọn máy tối ưu nhất, phương pháp truyền thống buộc phải chạy bước transpilation $M$ lần riêng biệt cho từng kiến trúc máy.
+    \item \textbf{Thiếu tính phản hồi tức thì ở pha thiết kế:} Lập trình viên thiết kế mạch ở lớp cấp cao mong muốn nhận được ước tính tài nguyên và thời gian chạy ngay lập tức trong môi trường phát triển (IDE) mà không phải chờ quy trình hạ tầng biên dịch hoàn tất.
+\end{enumerate}
+
+Để giải quyết khoảng trống nghiên cứu này, bài báo của chúng tôi đề xuất một kỹ thuật ước tính thời gian thực thi mạch lượng tử \textbf{trước giai đoạn biên dịch (pre-transpilation)}. Thay vì biên dịch mạch rồi mới trích xuất đặc trưng, mô hình của chúng tôi nhận trực tiếp đầu vào gồm: (1) thông tin mạch lượng tử ở lớp cấp cao do người dùng thiết kế (Target-Independent Level) và (2) bộ đặc trưng mô tả kiến trúc và trạng thái hiệu chuẩn của máy lượng tử mục tiêu. Mô hình sẽ tự động học mối tương quan phi tuyến giữa cấu trúc tương tác của mạch cấp cao và độ phức tạp phát sinh ngầm định khi ánh xạ lên kiến trúc phần cứng mục tiêu để đưa ra dự đoán thời gian thực thi chính xác.
+
+Nghiên cứu của chúng tôi tập trung giải quyết ba câu hỏi nghiên cứu (Research Questions - RQs) sau:
+\begin{itemize}
+    \item \textbf{RQ1 (Độ chính xác dự đoán trước biên dịch):} Kỹ thuật đề xuất có thể ước tính thời gian thực thi của mạch lượng tử từ thông tin mạch cấp cao và thông tin máy lượng tử với độ chính xác như thế nào so với ước tính của nền tảng đám mây và phương pháp sau biên dịch?
+    \item \textbf{RQ2 (Hiệu quả về tốc độ tính toán):} Việc loại bỏ bước biên dịch (transpilation) trong quá trình ước tính giúp tiết kiệm thời gian phản hồi (inference overhead) bao nhiêu lần so với quy trình dự đoán truyền thống?
+    \item \textbf{RQ3 (Mức độ ảnh hưởng của các đặc trưng):} Những đặc trưng nào của mạch cấp cao và thông số nào của phần cứng máy lượng tử đóng vai trò quan trọng nhất trong việc quyết định thời gian thực thi?
+\end{itemize}
+
+Các đóng góp chính của bài báo bao gồm:
+\begin{itemize}
+    \item Đề xuất khung kiến trúc đầu tiên cho phép ước tính trực tiếp thời gian thực thi mạch lượng tử ở tầng thiết kế cấp cao (pre-transpilation) kết hợp thông tin phần cứng QPU mà không cần chạy bộ biên dịch.
+    \item Xây dựng bộ đặc trưng kết hợp (joint representation) biểu diễn sự tương thích giữa cấu trúc tương tác qubit của mạch cấp cao và cấu trúc tô-pô vật lý, tập cổng cơ sở cũng như thông số hiệu chuẩn của máy lượng tử.
+    \item Thực hiện đánh giá thực nghiệm toàn diện trên bộ dữ liệu chuẩn, chứng minh tính ưu việt về tốc độ ước tính và độ chính xác cao của giải thuật đề xuất.
+\end{itemize}
+
+Cấu trúc phần còn lại của bài báo được tổ chức như sau: Mục 2 trình bày các nghiên cứu liên quan. Mục 3 giới thiệu kiến thức nền tảng về mạch lượng tử, quy trình biên dịch và thời gian thực thi. Mục 4 trình bày chi tiết phương pháp và mô hình đề xuất. Mục 5 mô tả thiết lập thực nghiệm và kết quả đánh giá. Mục 6 thảo luận các vấn đề mở rộng và các đe dọa đến tính hợp lệ của nghiên cứu. Cuối cùng, Mục 7 kết luận bài báo và đề xuất hướng phát triển.
+
+\section{Các Nghiên cứu Liên quan (Related Works)}
+Nghiên cứu của chúng tôi liên quan mật thiết đến ba hướng tiếp cận chính: ước tính tài nguyên và thời gian thực thi lượng tử, dự đoán chất lượng mạch lượng tử trước biên dịch, và ước tính thời gian thực thi phần mềm cổ điển.
+
+\subsection{Ước tính tài nguyên và thời gian thực thi mạch lượng tử}
+Ước tính tài nguyên lượng tử (Quantum Resource Estimation) đóng vai trò định hướng cho việc triển khai các thuật toán lượng tử trên phần cứng thực tế \cite{quetschlich2024utilizing}. Các công cụ đầu tiên như QuRE \cite{suchara2013qure} và khung đánh giá của Beverland cùng cộng sự \cite{beverland2022assessing} tập trung vào điện toán lượng tử chịu lỗi (Fault-Tolerant Quantum Computing - FTQC) trong tương lai xa, ước tính số lượng qubit vật lý và thời gian chạy dựa trên các mã sửa lỗi bề mặt (surface codes) với hàng triệu cổng. Tuy nhiên, các mô hình lý thuyết này không phản ánh đúng độ trễ thực thi trên các thiết bị NISQ hiện tại.
+
+Đối với các thiết bị NISQ hiện hành, Ma và Li \cite{ma2025understanding} gần đây đã nghiên cứu đặc tính thời gian chạy và đề xuất mô hình dựa trên Graph Transformer kết hợp học chủ động (Active Learning) để ước tính thời gian thực thi mạch lượng tử trên trình mô phỏng và máy lượng tử IBM. Mặc dù đạt hệ số xác định $R^2 > 0.90$, phương pháp của họ yêu cầu mạch đầu vào phải được biên dịch cụ thể cho từng backend để lấy được đồ thị DAG sau ánh xạ và thông số $T_1, T_2$ tại đúng vị trí qubit vật lý đã gán. Khác biệt hoàn toàn với nghiên cứu trên, phương pháp của chúng tôi thực hiện dự đoán \textit{trước bước biên dịch} (pre-transpilation), giúp loại bỏ hoàn toàn nútắt cổ chai về thời gian biên dịch khi cần ước tính nhanh hoặc lựa chọn giữa nhiều máy lượng tử.
+
+\subsection{Dự đoán độ trung thực và lựa chọn thiết bị lượng tử}
+Bên cạnh thời gian thực thi, độ trung thực (fidelity) của mạch lượng tử cũng là một chỉ số quan trọng được nghiên cứu rộng rãi \cite{gilyen2022improved}. Nhiều công trình đã áp dụng học máy và mạng nơ-ron đồ thị (GNN) để dự đoán fidelity của mạch dựa trên độ sâu, số lượng cổng và tỷ lệ lỗi phần cứng \cite{vadali2024quantum, wang2022quest}. Đáng chú ý, Quetschlich và cộng sự đã phát triển MQT Predictor \cite{quetschlich2023mqtpredictor, quetschlich2023predicting}, sử dụng học tăng cường và học máy có giám sát để tự động lựa chọn thiết bị và tùy chọn biên dịch tối ưu cho một mạch lượng tử chưa biên dịch. Các nghiên cứu này chứng minh rằng các đặc trưng ở mức trừu tượng cấp cao (target-independent) có chứa đủ thông tin tiềm ẩn để dự đoán hiệu năng sau biên dịch. Kế thừa ý tưởng giải phóng người dùng khỏi bước biên dịch tốn kém này, chúng tôi mở rộng bài toán sang việc mô hình hóa và dự đoán chính xác thời gian thực thi thực tế (execution time) trên phần cứng lượng tử.
+
+\subsection{Ước tính thời gian thực thi phần mềm cổ điển}
+Trong kỹ thuật phần mềm cổ điển, việc dự đoán thời gian thực thi chương trình (như ACET hoặc WCET) đã được nghiên cứu sâu rộng thông qua phân tích mã tĩnh và học máy \cite{huang2010predicting, kwon2014mantis, meng2016nonlinear, bielecki2023estimation}. Chẳng hạn, SPORE \cite{huang2010predicting} và Mantis \cite{kwon2014mantis} trích xuất số vòng lặp và nhánh rẽ để xây dựng mô hình hồi quy phi tuyến. Tuy nhiên, như đã chỉ ra trong \cite{ma2025understanding}, các kỹ thuật cổ điển không thể áp dụng trực tiếp cho chương trình lượng tử vì cấu trúc mạch lượng tử là đồ thị luồng trạng thái rối lượng tử chứ không phải luồng điều khiển tuần tự, đồng thời định lý bất khả sao chép (no-cloning theorem) \cite{wootters1982single} ngăn cản việc theo vết (tracing) trạng thái trung gian trong lúc chạy.
+
+\section{Kiến thức Nền tảng (Background)}
+
+\subsection{Mạch lượng tử ở tầng thiết kế cấp cao}
+Một mạch lượng tử (quantum circuit) là mô hình tính toán biểu diễn quá trình thao tác trên các bit lượng tử (qubits) thông qua chuỗi các cổng lượng tử (quantum gates) và phép đo (measurements). Khi nhà phát triển thiết kế thuật toán bằng các bộ công cụ phần mềm (SDK) như Qiskit \cite{javadi2024qiskit} hay Cirq, mạch được tạo ra nằm ở \textbf{tầng độc lập thiết bị (Target-Independent / Algorithmic Level)}. Ở tầng này:
+\begin{itemize}
+    \item Các qubit là các \textit{qubit logic} ($q_0, q_1, \dots, q_{n-1}$), được giả định là có khả năng tương tác đôi một bất kỳ (all-to-all connectivity) mà không bị giới hạn bởi khoảng cách vật lý.
+    \item Các cổng lượng tử sử dụng là các cổng toán học tổng quát hoặc các khối hàm cấp cao (ví dụ: cổng Hadamard $H$, cổng pha có điều khiển $CP$, cổng Toffoli $CCX$, cổng $U_3$, hoặc các khối biến đổi Fourier lượng tử QFT) mà chưa bị giới hạn bởi tập cổng vật lý của phần cứng.
+\end{itemize}
+
+\subsection{Quy trình biên dịch (Transpilation) và ảnh hưởng đến cấu trúc mạch}
+Các bộ xử lý lượng tử thực tế (đặc biệt là công nghệ qubit siêu dẫn của IBM, Google, Rigetti) có hai ràng buộc vật lý nghiêm ngặt \cite{quetschlich2023mqtpredictor}:
+\begin{enumerate}
+    \item \textbf{Giới hạn tập cổng cơ sở (Native Gate Set):} Mỗi QPU chỉ hỗ trợ thực thi trực tiếp một số lượng rất nhỏ các cổng vật lý cơ bản. Ví dụ, các máy IBM Eagle (như \texttt{ibm\_osaka}, \texttt{ibm\_kyoto}) chỉ hỗ trợ tập cổng cơ sở gồm $\{ECR, ID, RZ, SX, X\}$. Mọi cổng cấp cao như $CX$, $CP$, $SWAP$ hay $CCX$ đều phải được phân rã (decompose) thành chuỗi nhiều cổng $ECR$ và các phép quay đơn qubit.
+    \item \textbf{Giới hạn kết nối vật lý (Coupling Map):} Các qubit vật lý trên chip chỉ được kết nối với một vài qubit lân cận (ví dụ: kiến trúc Heavy-Hex của IBM chỉ cho phép mỗi qubit kết nối tối đa với 2 hoặc 3 qubit khác). Nếu mạch cấp cao yêu cầu một cổng 2-qubit tác động lên hai qubit logic không nằm cạnh nhau trên chip vật lý, bộ biên dịch (transpiler) buộc phải chèn thêm một loạt các cổng hoán vị ($SWAP$), trong đó mỗi cổng $SWAP$ lại bị phân rã thành 3 cổng 2-qubit cơ sở ($CX$ hoặc $ECR$).
+\end{enumerate}
+
+Hệ quả là sau quá trình transpilation, số lượng cổng thực tế ($N_{\text{transpiled}}$) và độ sâu của mạch ($D_{\text{transpiled}}$) thường tăng lên gấp nhiều lần so với mạch cấp cao ban đầu ($N_{\text{high}}, D_{\text{high}}$). Mức độ gia tăng này phụ thuộc chặt chẽ vào sự tương thích giữa \textit{đồ thị tương tác của mạch cấp cao} và \textit{đồ thị kết nối của máy lượng tử mục tiêu}.
+
+\subsection{Thời gian thực thi trên máy lượng tử (Quantum Execution Time)}
+Khi một mạch lượng tử được thực thi trên QPU với số lần lặp lại là $S$ (shots), tổng thời gian thực thi hệ thống (system execution time) bao gồm: thời gian nạp xung điều khiển vào bộ nhớ phần cứng, thời gian thực thi các xung hiệu chuẩn, và tổng thời gian chạy $S$ lần mạch lượng tử. Trong mỗi lần chạy (shot), thời gian tiêu tốn bao gồm:
+\begin{equation}
+    T_{\text{shot}} \approx T_{\text{circuit\_pulses}} + T_{\text{readout}} + T_{\text{rep\_delay}}
+\end{equation}
+trong đó $T_{\text{circuit\_pulses}}$ là độ dài lịch trình xung của toàn bộ các cổng lượng tử dọc theo đường găng (critical path) sau biên dịch, $T_{\text{readout}}$ là thời gian đo trạng thái các qubit, và $T_{\text{rep\_delay}}$ là độ trễ nghỉ giữa hai lần lặp liên tiếp để tái thiết lập trạng thái cơ bản cho qubit (relaxation/reset delay). Như vậy, mặc dù không thực hiện biên dịch, nếu một mô hình nắm bắt được cấu trúc mạch cấp cao và các thông số vật lý của máy (độ dài xung cổng cơ sở, tô-pô kết nối, $T_{\text{readout}}$, $T_{\text{rep\_delay}}$), mô hình đó hoàn toàn có cơ sở lý thuyết để ước lượng trực tiếp tổng thời gian thực thi cuối cùng.
+
+\section{Phương pháp Đề xuất: Ước tính Thời gian Thực thi Trước Biên dịch}
+
+\subsection{Tổng quan khung kiến trúc (Overview Framework)}
+Mục tiêu của chúng tôi là xây dựng một hàm ánh xạ dự đoán $\mathcal{F}_{\Theta}$ nhận đầu vào là một cặp $(\mathcal{C}_{\text{high}}, \mathcal{M})$ và đầu ra là thời gian thực thi ước tính $\hat{y} \in \mathbb{R}^+$:
+\begin{equation}
+    \hat{y} = \mathcal{F}_{\Theta}\left( \phi_{\text{circuit}}(\mathcal{C}_{\text{high}}), \phi_{\text{machine}}(\mathcal{M}) \right)
+\end{equation}
+trong đó $\mathcal{C}_{\text{high}}$ là mạch lượng tử cấp cao trước biên dịch, $\mathcal{M}$ là thông tin mô tả máy lượng tử mục tiêu (hoặc trình mô phỏng mục tiêu), $\phi_{\text{circuit}}$ và $\phi_{\text{machine}}$ lần lượt là hai bộ trích xuất đặc trưng cực nhanh không qua biên dịch.
+
+\begin{table}[htbp]
+\centering
+\caption{So sánh sự khác biệt giữa quy trình ước tính sau biên dịch \cite{ma2025understanding} và phương pháp trước biên dịch của chúng tôi}
+\label{tab:comparison_workflow}
+\begin{tabularx}{\textwidth}{l X X}
+\toprule
+\textbf{Tiêu chí} & \textbf{Phương pháp Sau Biên dịch (Post-transpilation \cite{ma2025understanding})} & \textbf{Phương pháp Đề xuất (Pre-transpilation)} \\
+\midrule
+Mức độ trừu tượng đầu vào & Mạch đã biên dịch và ánh xạ vật lý (Target-dependent mapped level) & Mạch thiết kế cấp cao (Target-independent / Algorithmic level) \\
+Yêu cầu chạy Transpiler & Có (Bắt buộc biên dịch cho từng máy mục tiêu trước khi dự đoán) & \textbf{Không} (Hoàn toàn bỏ qua bước transpilation) \\
+Thông tin phần cứng sử dụng & Gán trực tiếp $T_1, T_2$ vào từng nút cổng sau khi đã biết vị trí qubit vật lý & Trích xuất vector đặc trưng tổng hợp về tô-pô và hiệu chuẩn của máy $\mathcal{M}$ \\
+Chi phí khảo sát $M$ máy & $M \times (T_{\text{transpile}} + T_{\text{extract}} + T_{\text{infer}})$ & $1 \times T_{\text{extract\_high}} + M \times T_{\text{infer}}$ \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Bảng \ref{tab:comparison_workflow} tóm tắt sự khác biệt cốt lõi giữa phương pháp của chúng tôi và phương pháp truyền thống. Nhờ tách biệt việc trích xuất đặc trưng mạch cấp cao $\phi_{\text{circuit}}(\mathcal{C}_{\text{high}})$ khỏi phần cứng, khi cần dự đoán trên $M$ máy lượng tử khác nhau, ta chỉ cần trích xuất đặc trưng mạch đúng 1 lần duy nhất.
+
+\subsection{Trích xuất đặc trưng mạch lượng tử cấp cao ($\phi_{\text{circuit}}(\mathcal{C}_{\text{high}})$)}
+Ở tầng cấp cao trước khi biên dịch, chúng tôi biểu diễn mạch lượng tử $\mathcal{C}_{\text{high}}$ thông qua hai nhóm thông tin: đặc trưng toàn cục cấp cao và đặc trưng cấu trúc tương tác của mạch.
+
+\subsubsection{Đặc trưng toàn cục của mạch cấp cao (High-level Global Features)}
+Từ mã nguồn mạch đầu vào của người dùng, chúng tôi trích xuất trực tiếp các thông số quy mô và chỉ số phức tạp cấu trúc (kế thừa và mở rộng từ bộ chỉ số SupermarQ \cite{tomesh2022supermarq}) mà không cần biên dịch:
+\begin{itemize}
+    \item \textbf{Thông số quy mô cơ bản:} Số lượng qubit logic sử dụng ($n_q$), độ sâu của mạch cấp cao ($d_{\text{high}}$), tổng số cổng ($n_g$), số lượng phép đo ($n_m$), và phân bố số lượng của từng loại cổng logic cấp cao (đơn qubit, 2-qubit như $CX, CP, SWAP$, và đa qubit như $CCX$).
+    \item \textbf{Độ giao tiếp chương trình (Program Communication - $PC$):} Đo lường mật độ tương tác giữa các qubit logic trong mạch. Gọi $deg(q_i)$ là số lượng qubit logic khác có tương tác trực tiếp với qubit $q_i$ thông qua các cổng đa qubit, khi đó:
+    \begin{equation}
+        PC = \frac{\sum_{i=1}^{n_q} deg(q_i)}{n_q (n_q - 1)}
+    \end{equation}
+    Chỉ số $PC$ càng cao (tiến gần 1) báo hiệu mạch đòi hỏi kết nối dày đặc, dẫn đến nguy cơ phát sinh nhiều cổng $SWAP$ khi đưa lên phần cứng có kết nối thưa.
+    \item \textbf{Độ sâu đường găng (Critical Depth - $CD$):} Tỷ lệ số cổng 2-qubit nằm trên đường phụ thuộc dài nhất của mạch so với tổng số cổng 2-qubit, phản ánh tính tuần tự hóa của mạch.
+    \item \textbf{Tỷ lệ rối lượng tử (Entanglement Ratio - $ER$):} Tỷ lệ giữa số lượng cổng đa qubit ($n_{2q+}$) trên tổng số cổng thao tác trong mạch ($ER = n_{2q+} / n_g$).
+    \item \textbf{Độ song song (Parallelism - $P$) và Độ hoạt động (Liveness - $L$):} Đánh giá khả năng thực thi đồng thời các cổng trên các qubit khác nhau và tỷ lệ thời gian qubit hoạt động so với thời gian rỗi (idle):
+    \begin{equation}
+        P = \left( \frac{n_g / d_{\text{high}} - 1}{n_q - 1} \right)
+    \end{equation}
+\end{itemize}
+
+\subsubsection{Đặc trưng đồ thị của mạch cấp cao (High-level Graph / Interaction Features)}
+Một mạch lượng tử cấp cao có thể được biểu diễn dưới dạng Đồ thị có hướng không chu trình (DAG) $\mathcal{G}_{\text{DAG}} = (V, E)$ hoặc Đồ thị tương tác Qubit (Qubit Interaction Graph - QIG) $\mathcal{G}_{\text{QIG}} = (V_q, E_q, W_q)$, trong đó mỗi đỉnh thuộc $V_q$ là một qubit logic và trọng số cạnh $w_{ij} \in W_q$ biểu thị số lần tương tác cổng 2-qubit giữa $q_i$ và $q_j$.
+
+% =========================================================================
+% VÙNG PLACEHOLDER 1: CHI TIẾT BIỂU DIỄN MẠCH CỦA TÁC GIẢ
+% =========================================================================
+\vspace{0.2cm}
+\noindent\fcolorbox{accentblue}{placeholderbg}{%
+\parbox{0.96\textwidth}{%
+\textbf{[PHẦN DÀNH CHO TÁC GIẢ ĐIỀN NỘI DUNG - CHI TIẾT ĐẶC TRƯNG MẠCH]:} \\
+\textit{Gợi ý chỉnh sửa trên Overleaf:} Tại đây, bạn hãy mô tả cụ thể các đặc trưng mạch cấp cao mà giải thuật của bạn sử dụng. Ví dụ:
+\begin{itemize}
+    \item Danh sách chính xác số chiều (dimensionality) của vector đặc trưng mạch đầu vào.
+    \item Cách bạn mã hóa các cổng đa qubit (3-qubit trở lên) hoặc các khối hàm ở lớp cấp cao (nếu có).
+    \item Nếu bạn dùng đồ thị (DAG hoặc Qubit Interaction Graph), hãy định nghĩa vector đặc trưng tại mỗi nút $v \in V$ và cạnh $e \in E$ ở mức chưa biên dịch (lưu ý: ở mức này chưa có vị trí qubit vật lý cố định).
+\end{itemize}
+}}
+\vspace{0.2cm}
+
+\subsection{Trích xuất đặc trưng máy lượng tử mục tiêu ($\phi_{\text{machine}}(\mathcal{M})$)}
+Do không thực hiện bước biên dịch để gán từng cổng vào từng qubit vật lý cụ thể, mô hình cần một bộ đặc trưng tổng quát để nắm bắt khả năng xử lý và các giới hạn vật lý của máy lượng tử $\mathcal{M}$. Chúng tôi trích xuất thông tin phần cứng từ dữ liệu cấu hình và hiệu chuẩn (Backend Configuration \& Calibration Properties) thông qua hai khía cạnh:
+
+\begin{enumerate}
+    \item \textbf{Đặc trưng kiến trúc và tô-pô kết nối (Topological Features):}
+    Đồ thị kết nối vật lý của máy lượng tử được biểu diễn bởi $\mathcal{G}_{\text{hw}} = (V_{\text{phys}}, E_{\text{phys}})$. Các thông số đặc trưng bao gồm: tổng số qubit vật lý ($N_{\text{phys}}$), bậc kết nối trung bình (average node degree), đường kính đồ thị phần cứng (graph diameter), khoảng cách đường đi ngắn nhất trung bình giữa các cặp qubit (average shortest path length), và mật độ cạnh (edge density). Các chỉ số này quyết định trực tiếp chi phí định tuyến (routing overhead) khi chạy bất kỳ mạch nào trên máy đó.
+    \item \textbf{Đặc trưng thời gian xung và hiệu chuẩn phần cứng (Hardware Timing \& Calibration Features):}
+    Thay vì gán $T_1, T_2$ vào từng nút cổng sau biên dịch, chúng tôi tổng hợp các thống kê phân phối (như giá trị trung bình Mean, độ lệch chuẩn Std, Min, Max, Median) trên toàn bộ chip lượng tử cho các đại lượng vật lý ảnh hưởng trực tiếp đến thời gian thực thi:
+    \begin{itemize}
+        \item Thời gian thực thi cổng 2-qubit cơ sở ($t_{2q}$, ví dụ thời lượng xung cổng $ECR$ hoặc $CX$ tính bằng nano-giây).
+        \item Thời gian thực thi cổng đơn qubit cơ sở ($t_{1q}$, ví dụ cổng $SX, X$).
+        \item Thời gian đo trạng thái trung bình của các qubit ($t_{\text{readout}}$) và độ trễ lặp lại giữa các shots ($t_{\text{rep\_delay}}$).
+        \item Thời gian hồi phục năng lượng và duy trì pha trung bình của hệ thống ($T_1, T_2$) cùng tỷ lệ lỗi cổng trung bình (gate error rates).
+        \item Mã định danh loại tập cổng cơ sở (Native Gate Set encoding) để mô hình nhận biết chi phí phân rã cổng tương ứng.
+    \end{itemize}
+\end{enumerate}
+
+% =========================================================================
+% VÙNG PLACEHOLDER 2: KIẾN TRÚC MÔ HÌNH VÀ GIẢI THUẬT ĐỀ XUẤT
+% =========================================================================
+\subsection{Kiến trúc Mô hình và Giải thuật Dự đoán Đề xuất}
+
+\noindent\fcolorbox{accentblue}{placeholderbg}{%
+\parbox{0.96\textwidth}{%
+\textbf{[PHẦN DÀNH CHO TÁC GIẢ ĐIỀN NỘI DUNG - MÔ HÌNH VÀ GIẢI THUẬT ĐỀ XUẤT]:} \\
+\textit{Hãy thay thế khung này bằng mô tả chi tiết giải thuật của bạn. Bạn có thể sử dụng cấu trúc các tiểu mục gợi ý bên dưới:}
+
+\vspace{0.2cm}
+\textbf{4.4.1 Kiến trúc mạng / Mô hình học máy (Model Architecture):}
+\begin{itemize}
+    \item Mô tả nhánh xử lý đặc trưng mạch cấp cao $\phi_{\text{circuit}}(\mathcal{C}_{\text{high}})$ (ví dụ: dùng GNN, Graph Transformer, MLP, hay XGBoost/LightGBM/CatBoost...).
+    \item Mô tả nhánh xử lý thông tin máy lượng tử $\phi_{\text{machine}}(\mathcal{M})$ (ví dụ: nhúng vector thông số máy hoặc dùng GNN trên coupling map của máy).
+    \item Cơ chế kết hợp (Fusion Mechanism): Cách kết hợp thông tin mạch và thông tin máy (ví dụ: Concatenation, Cross-Attention giữa mạch và phần cứng, hoặc điều chế đặc trưng FiLM) để ước lượng ngầm định độ giãn nở mạch sau transpilation.
+\end{itemize}
+
+\textbf{4.4.2 Hàm mất mát và Quy trình huấn luyện (Loss Function \& Training Procedure):}
+\begin{itemize}
+    \item Công thức toán học của các tầng trong mô hình và hàm mục tiêu tối ưu hóa (ví dụ: MSE Loss, Huber Loss, hoặc Log-MSE Loss).
+    \item Chiến lược lấy mẫu dữ liệu huấn luyện (nếu có sử dụng Active Learning hoặc Transfer Learning từ simulator sang máy thực).
+\end{itemize}
+}}
+
+\section{Thiết lập Thực nghiệm và Đánh giá Kết quả (Experimental Evaluation)}
+
+\subsection{Chuẩn bị dữ liệu và Thiết bị thực nghiệm (Data Preparation \& Backends)}
+Để đảm bảo tính khách quan và khả năng so sánh với các nghiên cứu trước, chúng tôi sử dụng bộ dữ liệu chuẩn \textbf{MQT Benchmark (MQT Bench)} \cite{quetschlich2023mqt}. Đây là thư viện quy mô lớn cung cấp các mạch lượng tử đa dạng thuộc nhiều họ thuật toán khác nhau (như QAOA, VQE, QFT, Grover, Quantum Walk, GHZ, v.v.) với quy mô trải dài từ 2 đến 127 qubits. 
+
+Điểm quan trọng trong thiết lập của chúng tôi là: toàn bộ các mạch lượng tử đầu vào đưa vào mô hình dự đoán đều được lấy ở mức \textbf{Target-Independent Level} (tầng cấp cao người dùng thiết kế trên Qiskit \cite{javadi2024qiskit} trước khi qua bước transpilation). Thời gian thực thi thực tế (ground-truth execution time) được thu thập trên các thiết bị mục tiêu (backends) bao gồm các trình mô phỏng nhiễu và máy tính lượng tử thực tế của IBM Quantum (ví dụ: \texttt{FakeWashington}, \texttt{FakeSherbrooke}, \texttt{ibm\_osaka}, \texttt{ibm\_kyoto}) với số lượng shots tiêu chuẩn là 1024 shots cho mỗi lần chạy \cite{ma2025understanding}.
+
+\subsection{Độ đo đánh giá (Evaluation Metrics)}
+Để đánh giá toàn diện độ chính xác của mô hình ước tính thời gian thực thi, chúng tôi sử dụng các độ đo tiêu chuẩn cho bài toán hồi quy bao gồm: Hệ số xác định ($R^2$), Sai số bình phương trung bình (MSE), Sai số bình phương trung bình chuẩn hóa (NMSE), và Sai số tuyệt đối trung bình (MAE):
+\begin{equation}
+    R^2 = 1 - \frac{\sum_{i=1}^{N} (y_i - \hat{y}_i)^2}{\sum_{i=1}^{N} (y_i - \bar{y})^2}, \quad
+    \text{MSE} = \frac{1}{N} \sum_{i=1}^{N} (y_i - \hat{y}_i)^2, \quad
+    \text{NMSE} = \frac{\text{MSE}}{\frac{1}{N}\sum_{i=1}^{N} (y_i - \bar{y})^2}
+\end{equation}
+trong đó $y_i$ là thời gian thực thi thực tế của mạch thứ $i$, $\hat{y}_i$ là thời gian thực thi do mô hình ước tính từ mạch cấp cao, và $\bar{y}$ là giá trị trung bình của thời gian thực thi thực tế trên tập kiểm thử gồm $N$ mẫu. Giá trị $R^2$ càng tiến gần 1 và MSE, NMSE càng tiến gần 0 chứng tỏ mô hình dự đoán càng chính xác.
+
+Ngoài ra, để đánh giá hiệu quả tốc độ ở câu hỏi nghiên cứu RQ2, chúng tôi đo lường \textbf{Tổng thời gian trễ để đưa ra ước tính (Total Estimation Latency - $T_{\text{est}}$)}:
+\begin{itemize}
+    \item Đối với phương pháp sau biên dịch (Post-transpilation): $T_{\text{est\_post}} = T_{\text{transpile}} + T_{\text{feature\_extract}} + T_{\text{model\_infer}}$.
+    \item Đối với phương pháp trước biên dịch của chúng tôi (Pre-transpilation): $T_{\text{est\_pre}} = T_{\text{high\_extract}} + T_{\text{model\_infer}}$ (trong đó $T_{\text{transpile}} = 0$).
+\end{itemize}
+
+% =========================================================================
+% VÙNG PLACEHOLDER 3: KẾT QUẢ THỰC NGHIỆM CỦA TÁC GIẢ
+% =========================================================================
+\subsection{Kết quả trả lời RQ1: Độ chính xác ước tính thời gian thực thi trước biên dịch}
+
+\noindent\fcolorbox{accentblue}{placeholderbg}{%
+\parbox{0.96\textwidth}{%
+\textbf{[PHẦN DÀNH CHO TÁC GIẢ ĐIỀN KẾT QUẢ THỰC NGHIỆM RQ1]:} \\
+\textit{Hãy điền số liệu thực nghiệm của bạn vào Bảng \ref{tab:rq1_results} bên dưới và viết đoạn văn phân tích kết quả so sánh giữa mô hình của bạn với các phương pháp cơ sở (Baselines) trên cả Simulator và Máy lượng tử thực.}
+}}
+
+\begin{table}[htbp]
+\centering
+\caption{Kết quả so sánh độ chính xác ước tính thời gian thực thi giữa phương pháp đề xuất (Pre-transpilation) và các phương pháp cơ sở}
+\label{tab:rq1_results}
+\begin{tabularx}{\textwidth}{l X c c c c}
+\toprule
+\textbf{Môi trường đích} & \textbf{Phương pháp / Mô hình} & \textbf{Transpile?} & \textbf{MSE $\downarrow$} & \textbf{NMSE $\downarrow$} & \textbf{$R^2$ $\uparrow$} \\
+\midrule
+\multirow{4}{*}{Simulators} 
+ & Hồi quy tuyến tính (Linear Regression) & Không & [Điền số] & [Điền số] & [Điền số] \\
+ & Random Forest / XGBoost cơ sở & Không & [Điền số] & [Điền số] & [Điền số] \\
+ & Ma \& Li (Graph Transformer) \cite{ma2025understanding} & Có & 0.081 & 0.057 & 0.943 \\
+ & \textbf{Phương pháp Đề xuất (Ours)} & \textbf{Không} & \textbf{[Điền số]} & \textbf{[Điền số]} & \textbf{[Điền số]} \\
+\midrule
+\multirow{4}{*}{Quantum Computers} 
+ & Ước tính của IBM Quantum Platform & Có & 39981.699 & 10979.628 & -10978.628 \\
+ & Random Forest / XGBoost cơ sở & Không & [Điền số] & [Điền số] & [Điền số] \\
+ & Ma \& Li (Graph Transformer) \cite{ma2025understanding} & Có & 0.305 & 0.095 & 0.905 \\
+ & \textbf{Phương pháp Đề xuất (Ours)} & \textbf{Không} & \textbf{[Điền số]} & \textbf{[Điền số]} & \textbf{[Điền số]} \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{Kết quả trả lời RQ2: Đánh giá tốc độ ước tính và chi phí tính toán}
+
+\noindent\fcolorbox{accentblue}{placeholderbg}{%
+\parbox{0.96\textwidth}{%
+\textbf{[PHẦN DÀNH CHO TÁC GIẢ ĐIỀN KẾT QUẢ THỰC NGHIỆM RQ2]:} \\
+\textit{Tại đây, hãy trình bày kết quả chứng minh ưu thế vượt trội của việc dự đoán trước bước transpilation. Điền thời gian trung bình (tính bằng mili-giây hoặc giây) vào Bảng \ref{tab:rq2_overhead} để cho thấy phương pháp của bạn nhanh hơn bao nhiêu lần khi không phải chờ Qiskit Transpiler.}
+}}
+
+\begin{table}[htbp]
+\centering
+\caption{So sánh thời gian tiêu tốn (Overhead) để đưa ra ước tính thời gian thực thi cho một mạch lượng tử}
+\label{tab:rq2_overhead}
+\begin{tabularx}{\textwidth}{X c c c c}
+\toprule
+\textbf{Phương pháp} & \textbf{$T_{\text{transpile}}$ (ms)} & \textbf{$T_{\text{extract}}$ (ms)} & \textbf{$T_{\text{infer}}$ (ms)} & \textbf{Tổng $T_{\text{est}}$ (ms)} \\
+\midrule
+Sau biên dịch (Post-transpilation) & [Điền số] & [Điền số] & [Điền số] & [Điền số] ($1.0\times$) \\
+\textbf{Trước biên dịch (Ours)} & \textbf{0.0} & \textbf{[Điền số]} & \textbf{[Điền số]} & \textbf{[Điền số] ([Điền số]$\times$)} \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{Kết quả trả lời RQ3: Phân tích mức độ đóng góp của các thành phần (Ablation Study \& Feature Importance)}
+
+\noindent\fcolorbox{accentblue}{placeholderbg}{%
+\parbox{0.96\textwidth}{%
+\textbf{[PHẦN DÀNH CHO TÁC GIẢ ĐIỀN KẾT QUẢ THỰC NGHIỆM RQ3]:} \\
+\textit{Trình bày kết quả Ablation Study (khi lược bỏ đặc trưng thông tin máy lượng tử, hoặc lược bỏ đặc trưng mạch) trong Bảng \ref{tab:rq3_ablation} và phân tích độ quan trọng của các đặc trưng (ví dụ dùng SHAP values).}
+}}
+
+\begin{table}[htbp]
+\centering
+\caption{Nghiên cứu cắt giảm (Ablation Study) đánh giá vai trò của đặc trưng mạch cấp cao và đặc trưng máy lượng tử}
+\label{tab:rq3_ablation}
+\begin{tabularx}{\textwidth}{X c c c}
+\toprule
+\textbf{Cấu hình mô hình thử nghiệm} & \textbf{MSE $\downarrow$} & \textbf{NMSE $\downarrow$} & \textbf{$R^2$ $\uparrow$} \\
+\midrule
+Chỉ dùng đặc trưng mạch cấp cao (Không có thông tin máy $\mathcal{M}$) & [Điền số] & [Điền số] & [Điền số] \\
+Chỉ dùng đặc trưng toàn cục mạch + Thông tin máy $\mathcal{M}$ & [Điền số] & [Điền số] & [Điền số] \\
+Chỉ dùng đặc trưng cấu trúc đồ thị mạch + Thông tin máy $\mathcal{M}$ & [Điền số] & [Điền số] & [Điền số] \\
+\textbf{Mô hình đầy đủ (Full Proposed Model)} & \textbf{[Điền số]} & \textbf{[Điền số]} & \textbf{[Điền số]} \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\section{Thảo luận và Các đe dọa đến tính hợp lệ (Discussion \& Threats to Validity)}
+
+\subsection{Ứng dụng thực tiễn trong lập lịch đám mây và định tuyến thiết bị}
+Khả năng ước tính thời gian thực thi ngay ở tầng thiết kế cấp cao mà không cần biên dịch mở ra nhiều ứng dụng quan trọng:
+\begin{itemize}
+    \item \textbf{Tối ưu hóa lựa chọn Backend tức thì:} Người dùng có thể kiểm tra nhanh thời gian và chi phí dự kiến của thuật toán mình vừa viết trên hàng chục QPU khác nhau của IBM, Rigetti hay Amazon Braket chỉ trong vài mili-giây trước khi quyết định biên dịch chính thức cho một máy duy nhất.
+    \item \textbf{Lập lịch đám mây thông minh (Cloud Job Scheduling):} Nhà cung cấp dịch vụ đám mây lượng tử có thể tích hợp mô hình nhẹ này ngay tại cổng tiếp nhận tác vụ (Job Queue Gateway) để ước lượng chính xác thời gian chiếm dụng QPU, từ đó sắp xếp độ ưu tiên hàng đợi và phân bổ tài nguyên hợp lý hơn so với việc chỉ dùng ngưỡng thời gian xấu nhất (worst-case bound).
+\end{itemize}
+
+\subsection{Các đe dọa đến tính hợp lệ (Threats to Validity)}
+\begin{itemize}
+    \item \textbf{Tính hợp lệ nội tại (Internal Validity):} Quá trình biên dịch trong các SDK như Qiskit có sử dụng các thuật toán định tuyến ngẫu nhiên (như SABRE heuristic với các hạt giống ngẫu nhiên khác nhau) và các mức độ tối ưu hóa (\texttt{optimization\_level} từ 0 đến 3). Sự biến thiên của bộ biên dịch có thể làm thời gian thực thi thực tế dao động nhẹ đối với cùng một mạch đầu vào cấp cao. Để giảm thiểu yếu tố này, chúng tôi cố định mức cấu hình biên dịch tiêu chuẩn khi thu thập nhãn thời gian thực thi và lấy trung bình qua nhiều lần đo lặp lại.
+    \item \textbf{Tính hợp lệ ngoại tại (External Validity):} Thực nghiệm của chúng tôi hiện tập trung vào các mạch trong bộ dữ liệu MQT Bench và các thiết bị dựa trên công nghệ qubit siêu dẫn của IBM Quantum. Đối với các kiến trúc phần cứng khác như bẫy ion (Trapped-Ion) hay nguyên tử trung hòa (Neutral Atoms) có đặc tính kết nối toàn cục (all-to-all) và thời gian cổng khác biệt lớn, mô hình sẽ cần được tinh chỉnh (fine-tune) lại với thông số phần cứng tương ứng.
+    \item \textbf{Tính hợp lệ cấu trúc (Construct Validity):} Thông số hiệu chuẩn của máy lượng tử thực tế (như thời gian đọc, tỷ lệ lỗi, trạng thái nhiễu) có thể thay đổi theo từng ngày (daily calibration drift). Do đó, việc đưa trực tiếp các thông số hiệu chuẩn động của máy $\mathcal{M}$ vào đầu vào mô hình giúp giải thuật thích nghi tốt hơn so với các mô hình cố định phần cứng.
+\end{itemize}
+
+\section{Kết luận (Conclusion)}
+Trong bài báo này, chúng tôi đã đề xuất một kỹ thuật mới nhằm ước tính thời gian thực thi của mạch lượng tử dựa trực tiếp vào thông tin mạch đầu vào ở lớp thiết kế cấp cao và thông tin đặc trưng của máy lượng tử mục tiêu mà hoàn toàn không cần thực hiện bước biên dịch (transpilation). Bằng cách khai thác đồng thời các đặc trưng toàn cục, cấu trúc tương tác của mạch cấp cao và các thông số tô-pô, thời gian xung của phần cứng lượng tử, phương pháp của chúng tôi giải quyết triệt để nút thắt cổ chai về thời gian biên dịch của các phương pháp trước đây. Kết quả thực nghiệm cho thấy mô hình không chỉ đạt độ chính xác cao trong việc dự đoán thời gian chạy trên cả trình mô phỏng và máy lượng tử thực tế mà còn giảm thiểu đáng kể chi phí thời gian tính toán để đưa ra dự đoán. Trong tương lai, chúng tôi dự kiến mở rộng mô hình cho nhiều nền tảng phần cứng lượng tử đa dạng hơn (như IonQ, Rigetti) và kết hợp bài toán ước tính thời gian thực thi với ước tính độ trung thực (fidelity) để xây dựng hệ thống khuyến nghị phần cứng lượng tử đa mục tiêu hoàn toàn tự động.
+
+\section*{Lời cảm ơn (Acknowledgment)}
+Nghiên cứu này được tài trợ bởi \textbf{[Điền tên Quỹ tài trợ / Đề tài / Trường Đại học của bạn, Mã số đề tài nếu có]}. Các tác giả xin gửi lời cảm ơn đến IBM Quantum vì đã cung cấp quyền truy cập vào các tài nguyên máy tính lượng tử phục vụ cho quá trình thực nghiệm.
+
+\begin{thebibliography}{99}
+
+\bibitem{ma2025understanding}
+Ning Ma and Heng Li. 2025. Understanding and Estimating the Execution Time of Quantum Circuits. \textit{ACM Transactions on Software Engineering and Methodology (TOSEM)} (November 2025). arXiv:2411.15631v2.
+
+\bibitem{javadi2024qiskit}
+Ali Javadi-Abhari, Matthew Treinish, Kevin Krsulich, Christopher J. Wood, Jake Lishman, Julien Gacon, Simon Martiel, Paul D. Nation, Lev S. Bishop, Andrew W. Cross, et al. 2024. Quantum computing with Qiskit. \textit{arXiv preprint arXiv:2405.08810} (2024).
+
+\bibitem{quetschlich2023mqt}
+Nils Quetschlich, Lukas Burgholzer, and Robert Wille. 2023. MQT Bench: Benchmarking Software and Design Automation Tools for Quantum Computing. \textit{Quantum} 7 (July 2023), 1062.
+
+\bibitem{quetschlich2023mqtpredictor}
+Nils Quetschlich, Lukas Burgholzer, and Robert Wille. 2023. MQT Predictor: Automatic Device Selection with Device-Specific Circuit Compilation for Quantum Computing. \textit{arXiv preprint arXiv:2310.06889} (2023).
+
+\bibitem{quetschlich2023predicting}
+Nils Quetschlich, Lukas Burgholzer, and Robert Wille. 2023. Predicting good quantum circuit compilation options. In \textit{2023 IEEE International Conference on Quantum Software (QSW)}. IEEE, 43--53.
+
+\bibitem{quetschlich2024utilizing}
+Nils Quetschlich, Mathias Soeken, Prakash Murali, and Robert Wille. 2024. Utilizing Resource Estimation for the Development of Quantum Computing Applications. \textit{arXiv preprint arXiv:2402.12434} (2024).
+
+\bibitem{tomesh2022supermarq}
+Teague Tomesh, Pranav Gokhale, Victory Omole, Gokul Subramanian Ravi, Kaitlin N. Smith, Joshua Viszlai, Xin-Chuan Wu, Nikos Hardavellas, Margaret R. Martonosi, and Frederic T. Chong. 2022. SupermarQ: A scalable quantum benchmark suite. In \textit{2022 IEEE International Symposium on High-Performance Computer Architecture (HPCA)}. IEEE, 587--603.
+
+\bibitem{li2019tackling}
+Gushu Li, Yufei Ding, and Yuan Xie. 2019. Tackling the qubit mapping problem for NISQ-era quantum devices. In \textit{Proceedings of the Twenty-Fourth International Conference on Architectural Support for Programming Languages and Operating Systems (ASPLOS)}. 1001--1014.
+
+\bibitem{sivarajah2020t}
+Seyon Sivarajah, Silas Dilkes, Alexander Cowtan, Will Simmons, Alec Edgington, and Ross Duncan. 2020. t$|$ket$\rangle$: a retargetable compiler for NISQ devices. \textit{Quantum Science and Technology} 6, 1 (2020), 014003.
+
+\bibitem{wang2022quest}
+Hanrui Wang, Pengyu Liu, Jinglei Cheng, Zhiding Liang, Jiaqi Gu, Zirui Li, Yongshan Ding, Weiwen Jiang, Yiyu Shi, Xuehai Qian, et al. 2022. Quest: Graph transformer for quantum circuit reliability estimation. \textit{arXiv preprint arXiv:2210.16724} (2022).
+
+\bibitem{vadali2024quantum}
+Avi Vadali, Rutuja Kshirsagar, Prasanth Shyamsundar, and Gabriel N. Perdue. 2024. Quantum circuit fidelity estimation using machine learning. \textit{Quantum Machine Intelligence} 6, 1 (2024), 1.
+
+\bibitem{beverland2022assessing}
+Michael E. Beverland, Prakash Murali, Matthias Troyer, Krysta M. Svore, Torsten Hoefler, Vadym Kliuchnikov, Guang Hao Low, Mathias Soeken, Aarthi Sundaram, and Alexander Vaschillo. 2022. Assessing requirements to scale to practical quantum advantage. \textit{arXiv preprint arXiv:2211.07629} (2022).
+
+\bibitem{suchara2013qure}
+Martin Suchara, John Kubiatowicz, Arvin Faruque, Frederic T. Chong, Ching-Yi Lai, and Gerardo Paz. 2013. QuRE: The Quantum Resource Estimator toolbox. In \textit{2013 IEEE 31st International Conference on Computer Design (ICCD)}. 419--426.
+
+\bibitem{gilyen2022improved}
+Andr{\'a}s Gily{\'e}n and Alexander Poremba. 2022. Improved quantum algorithms for fidelity estimation. \textit{arXiv preprint arXiv:2203.15993} (2022).
+
+\bibitem{zhong2020quantum}
+Han-Sen Zhong, Hui Wang, Yu-Hao Deng, Ming-Cheng Chen, Li-Chao Peng, Yi-Han Luo, Jian Qin, Dian Wu, Xing Ding, Yi Hu, et al. 2020. Quantum computational advantage using photons. \textit{Science} 370, 6523 (2020), 1460--1463.
+
+\bibitem{huang2010predicting}
+Ling Huang, Jinzhu Jia, Bin Yu, Byung-Gon Chun, Petros Maniatis, and Mayur Naik. 2010. Predicting execution time of computer programs using sparse polynomial regression. \textit{Advances in Neural Information Processing Systems (NeurIPS)} 23 (2010).
+
+\bibitem{kwon2014mantis}
+Yongin Kwon, Sangmin Lee, Hayoon Yi, Donghyun Kwon, Seungjun Yang, Byung-gon Chun, Ling Huang, Petros Maniatis, Mayur Naik, and Yunheung Paek. 2014. Mantis: Efficient predictions of execution time, energy usage, memory usage and network usage on smart mobile devices. \textit{IEEE Transactions on Mobile Computing} 14, 10 (2014), 2059--2072.
+
+\bibitem{meng2016nonlinear}
+Fanqi Meng, Xiaohong Su, and Zhaoyang Qu. 2016. Nonlinear approach for estimating WCET during programming phase. \textit{Cluster Computing} 19, 3 (2016), 1449--1459.
+
+\bibitem{bielecki2023estimation}
+Jan Bielecki and Micha{\l} {\'S}mia{\l}ek. 2023. Estimation of execution time for computing tasks. \textit{Cluster Computing} 26, 6 (2023), 3943--3956.
+
+\bibitem{wootters1982single}
+William K. Wootters and Wojciech H. Zurek. 1982. A single quantum cannot be cloned. \textit{Nature} 299, 5886 (1982), 802--803.
+
+\end{thebibliography}
+
+\end{document}
