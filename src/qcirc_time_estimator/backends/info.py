@@ -1,7 +1,7 @@
-"""Data structures representing hardware backend properties and timing specifications."""
+"""Standardized representation of target backend timing and topology."""
 
 from dataclasses import dataclass, field
-from typing import Dict, List, Tuple, Optional
+from typing import Dict, List, Tuple
 
 
 @dataclass
@@ -24,20 +24,21 @@ class BackendInfo:
         key = (gate_name.lower(), tuple(qubits))
         if key in self.gate_durations_sec:
             return self.gate_durations_sec[key]
-        
+
         # Fallbacks based on gate type
-        if gate_name.lower() in ("cx", "ecr", "cz"):
+        op = gate_name.lower()
+        if op in ("cx", "ecr", "cz"):
             return self.avg_cx_duration_sec
-        elif gate_name.lower() in ("measure",):
+        elif op in ("measure",):
             return self.avg_measure_duration_sec
-        elif gate_name.lower() in ("rz", "z", "s", "t", "sdg", "tdg"):
+        elif op in ("rz", "z", "s", "t", "sdg", "tdg"):
             return 0.0  # Virtual Z gates take 0 duration
-        elif gate_name.lower() in ("x", "sx", "y", "h"):
+        elif op in ("x", "sx", "y", "h"):
             return self.avg_1q_duration_sec
         return self.avg_1q_duration_sec
 
     def get_distance(self, q1: int, q2: int) -> int:
-        """Return shortest path distance (number of hops) between two qubits on the coupling map."""
+        """Return shortest path distance (number of hops) between two qubits on coupling map."""
         if q1 == q2:
             return 0
         return self.shortest_path_matrix.get((q1, q2), 1)

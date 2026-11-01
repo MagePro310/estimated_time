@@ -1,10 +1,10 @@
 """Analytical critical path duration estimator based on circuit DAG traversal."""
 
 import time
-from typing import Dict, List, Tuple
+from typing import Dict, Tuple
 from qiskit import QuantumCircuit
 from .base import BaseDurationEstimator, EstimationResult
-from ..backends.backend_info import BackendInfo
+from ..backends import BackendInfo
 
 
 class AnalyticalCriticalPathEstimator(BaseDurationEstimator):

@@ -1,6 +1,6 @@
-"""Evaluation metrics for quantum circuit execution time estimation."""
+"""Statistical and benchmark metric calculations."""
 
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Optional
 import numpy as np
 from scipy.stats import pearsonr, spearmanr
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
@@ -12,63 +12,49 @@ def compute_benchmark_metrics(
     transpile_times: Optional[List[float]] = None,
     estimate_times: Optional[List[float]] = None,
 ) -> Dict[str, float]:
-    """
-    Compute regression and profiling performance metrics.
-
-    Args:
-        y_true: Ground truth execution durations (seconds).
-        y_pred: Estimated execution durations (seconds).
-        transpile_times: Optional list of Qiskit transpilation times (seconds).
-        estimate_times: Optional list of estimator execution times (seconds).
-
-    Returns:
-        Dictionary containing MAE, MAPE (%), RMSE, R2, Pearson_r, Spearman_rho, and Speedup.
-    """
+    """Compute standard statistical and speedup metrics comparing predictions against ground truth."""
     y_t = np.array(y_true, dtype=np.float64)
     y_p = np.array(y_pred, dtype=np.float64)
-
-    if len(y_t) == 0:
-        return {}
 
     mae = float(mean_absolute_error(y_t, y_p))
     rmse = float(np.sqrt(mean_squared_error(y_t, y_p)))
 
-    # MAPE: avoid division by zero
-    non_zero = y_t > 0
-    if np.any(non_zero):
-        mape = float(np.mean(np.abs((y_t[non_zero] - y_p[non_zero]) / y_t[non_zero])) * 100.0)
+    # Relative percentage error
+    valid_mask = y_t > 0
+    if np.any(valid_mask):
+        mape = float(np.mean(np.abs((y_t[valid_mask] - y_p[valid_mask]) / y_t[valid_mask])) * 100.0)
     else:
         mape = 0.0
 
-    # R2 score (if variance exists)
-    if len(y_t) > 1 and np.var(y_t) > 1e-18:
-        r2 = float(r2_score(y_t, y_p))
-    else:
-        r2 = 1.0 if np.allclose(y_t, y_p) else 0.0
+    r2 = float(r2_score(y_t, y_p)) if len(y_t) > 1 and np.var(y_t) > 0 else 0.0
 
-    # Pearson and Spearman correlation
-    if len(y_t) > 1 and np.std(y_t) > 1e-12 and np.std(y_p) > 1e-12:
-        pr, _ = pearsonr(y_t, y_p)
-        sr, _ = spearmanr(y_t, y_p)
+    # Pearson & Spearman correlations
+    if len(y_t) > 1 and np.std(y_t) > 0 and np.std(y_p) > 0:
+        p_r, _ = pearsonr(y_t, y_p)
+        s_r, _ = spearmanr(y_t, y_p)
+        pearson_val = float(p_r)
+        spearman_val = float(s_r)
     else:
-        pr = 1.0 if np.allclose(y_t, y_p) else 0.0
-        sr = 1.0 if np.allclose(y_t, y_p) else 0.0
+        pearson_val = 0.0
+        spearman_val = 0.0
 
-    metrics = {
+    metrics: Dict[str, float] = {
         "mae_sec": mae,
-        "mape_percent": mape,
         "rmse_sec": rmse,
+        "mape_percent": mape,
         "r2_score": r2,
-        "pearson_r": float(pr),
-        "spearman_rho": float(sr),
+        "pearson_r": pearson_val,
+        "spearman_rho": spearman_val,
     }
 
     if transpile_times and estimate_times and len(transpile_times) == len(estimate_times):
         t_trans = np.array(transpile_times, dtype=np.float64)
         t_est = np.array(estimate_times, dtype=np.float64)
-        valid = t_est > 0
-        if np.any(valid):
-            speedup = float(np.mean(t_trans[valid] / t_est[valid]))
-            metrics["avg_speedup_factor"] = speedup
+        valid_est = t_est > 0
+        if np.any(valid_est):
+            speedups = t_trans[valid_est] / t_est[valid_est]
+            metrics["avg_speedup_factor"] = float(np.mean(speedups))
+            metrics["median_speedup_factor"] = float(np.median(speedups))
 
     return metrics
+

@@ -16,7 +16,6 @@ dependencies = [
     "pandas>=2.0.0",
     "matplotlib>=3.8.0",
     "seaborn>=0.13.0",
-    "pyyaml>=6.0.0",
 ]
 
 [project.optional-dependencies]
@@ -25,7 +24,7 @@ dev = [
 ]
 
 [project.scripts]
-qcirc-estimator = "qcirc_time_estimator.cli:main"
+qcirc-estimator = "qcirc_time_estimator.main:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]

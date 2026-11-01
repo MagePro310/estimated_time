@@ -15,40 +15,63 @@ Quy trình trên tiêu tốn đáng kể thời gian tính toán của CPU (từ
 
 ---
 
-## 2. Kiến Trúc Khung Repo
+## 2. Kiến Trúc Khung Repo (Mô-đun Hóa & Chuẩn Hóa)
 
 ```text
 estimated_time/
-├── configs/
-│   └── default_experiment.yaml        # Cấu hình danh sách benchmark, opt level, backend
+├── main.py                            # Entry point thực thi thực nghiệm trực tiếp
 ├── data/
 │   ├── circuits/                      # Cache các mạch QASM
-│   └── results/                       # Bảng CSV, JSON metrics và biểu đồ PNG kết quả
+│   └── results/                       # Bảng CSV dataset, metadata và metrics kết quả
+│       ├── ground_truth_dataset.csv   # Dataset chuẩn Ground Truth 51 cột cho ML
+│       └── backends_metadata.csv      # Thông số kỹ thuật các backend IBM
+├── paper/                             # Tài liệu báo cáo / bản thảo bài báo
+│   ├── paper.tex                      # Bản thảo LaTeX bài báo khoa học
+│   └── paper.pdf                      # Bản PDF bài báo khoa học đã biên dịch
 ├── src/
 │   └── qcirc_time_estimator/
-│       ├── backends/                  # Quản lý FakeBelemV2 và ma trận khoảng cách tô-pô
-│       │   ├── backend_info.py        # Dataclass BackendInfo
-│       │   └── fake_belem.py          # Trích xuất gate durations, dt, BFS shortest paths
-│       ├── circuits/                  # Nạp mạch từ MQT Bench (Munich Quantum Toolkit)
-│       │   └── mqt_loader.py          # Nạp mạch INDEP / ALG theo dải qubit 2..5
+│       ├── backends/                  # Quản lý 68 fake backends và BackendInfo
+│       │   ├── info.py                # Dataclass BackendInfo & ma trận khoảng cách
+│       │   ├── provider.py            # IBM FakeProvider integration & extractor
+│       │   └── __init__.py            # Export module backends
+│       ├── circuits/                  # Nạp mạch từ MQT Bench theo dải qubit
+│       │   ├── loader.py              # Loader & benchmark suite generator
+│       │   └── __init__.py            # Export module circuits
 │       ├── ground_truth/              # Bộ tính duration chính xác bằng Qiskit
-│       │   └── qiskit_scheduler.py    # Transpile + Scheduling (ASAP/ALAP)
-│       ├── estimators/                # Các mô hình ước tính thời gian
+│       │   └── scheduler.py           # Transpile + pulse scheduling (ASAP/ALAP)
+│       │   └── __init__.py            # Export module ground_truth
+│       ├── features/                  # Trích xuất đặc trưng mạch & phần cứng
+│       │   ├── extractor.py           # phi_circuit, phi_machine & tương tác
+│       │   └── __init__.py            # Export module features
+│       ├── dataset/                   # Quản lý lưu trữ dataset và metadata
+│       │   ├── manager.py             # CSVDataManager cho dataset 51 cột
+│       │   └── __init__.py            # Export module dataset
+│       ├── estimators/                # Các mô hình ước tính thời gian trước biên dịch
 │       │   ├── base.py                # Abstract class BaseDurationEstimator
 │       │   ├── analytical.py          # Critical path DAG traversal
 │       │   ├── routing_aware.py       # Critical path + SWAP routing penalty
-│       │   └── ml_estimator.py        # Random Forest Regressor trên vector đặc trưng mạch
-│       ├── evaluation/                # Bộ đo lường, benchmark runner và vẽ biểu đồ
-│       │   ├── metrics.py             # MAE, MAPE, RMSE, Pearson r, Spearman rho, Speedup
-│       │   ├── benchmark_runner.py    # Điều phối thực nghiệm tự động
-│       │   └── visualizer.py          # Xuất đồ thị Scatter, Error Bar và Speedup
-│       └── cli.py                     # Giao diện dòng lệnh CLI
-├── tests/                             # Bộ unit test toàn diện (pytest)
+│       │   ├── clops_depth_estimator.py # Ước tính NewDepth * CLOPS (Physics & Calibrated)
+│       │   ├── ml_estimator.py        # Random Forest Regressor trên vector đặc trưng
+│       │   └── __init__.py            # Export module estimators
+│       ├── evaluation/                # Điều phối thực nghiệm, đo lường & biểu đồ
+│       │   ├── runner.py              # BenchmarkRunner & MultiBackendRunner
+│       │   ├── metrics.py             # Tính toán MAE, MAPE, RMSE, Pearson r, Speedup
+│       │   ├── visualizer.py          # Xuất đồ thị Scatter, Error Bar và Speedup
+│       │   └── __init__.py            # Export module evaluation
+│       ├── config.py                  # Cấu hình thực nghiệm & các preset
+│       ├── main.py                    # Dispatcher chính của package
+│       ├── __main__.py                # Cho phép python -m qcirc_time_estimator
+│       └── __init__.py                # Export public API tinh gọn, chuẩn hóa
+├── tests/                             # Bộ unit test toàn diện (pytest - 25 tests)
 │   ├── test_backend.py
 │   ├── test_mqt_loader.py
 │   ├── test_ground_truth.py
 │   ├── test_estimators.py
-│   └── test_benchmark.py
+│   ├── test_clops_depth_estimator.py
+│   ├── test_benchmark.py
+│   ├── test_features.py
+│   ├── test_csv_manager.py
+│   └── test_multi_backend.py
 ├── pyproject.toml
 ├── requirements.txt
 └── README.md
@@ -63,6 +86,7 @@ estimated_time/
 | **Ground Truth (Qiskit)** | `transpile(qc, backend=FakeBelemV2(), scheduling_method='asap')` $\to D_{\text{clock}} \times dt$ | Độ chính xác tuyệt đối trên mô hình giả lập, tốn thời gian CPU. |
 | **Analytical Critical Path** | Duyệt DAG theo các đường qubit wire, tích lũy độ trễ của cổng 1Q và đồng bộ hóa ở các cổng 2Q. | Siêu nhanh ($< 0.1\text{ ms}$), phản ánh đúng đường tới hạn lý tưởng. |
 | **Routing-Aware** | Tích hợp ma trận khoảng cách đường đi ngắn nhất $D_{ij}$ trên coupling map chữ T của Belem: cộng dồn $(D_{ij} - 1) \times 3 \times t_{CX}$ cho các cổng 2Q không kề nhau. | Giảm thiểu sai số do các cổng SWAP gây ra khi ánh xạ lên phần cứng thực. |
+| **CLOPS-Aware NewDepth** | Ước tính qua công thức $\text{NewDepth} \times \tau_{\text{layer}}$ (với $\tau_{\text{layer}} = 1/\text{CLOPS} \approx t_{CX}$), trong đó $\text{NewDepth} = D_0 + \alpha \Delta_{1Q} + \beta \Delta_{\text{topo}} + \gamma \Delta_{\text{multi}} + \mu \Delta_{\text{meas}}$. Hỗ trợ cả 2 chế độ: Physics-Informed (Zero-shot) và Calibrated (NNLS). | Cực nhanh ($> 150\text{x}$ speedup), mô hình hóa tường minh các yếu tố dãn nở độ sâu vật lý, tương quan cao ($r > 0.82$). |
 | **ML Surrogate Regressor** | Trích xuất 9 đặc trưng (độ sâu, số lượng 1Q/2Q/Meas, mật độ, khoảng cách tương tác, neo analytical) $\to$ huấn luyện RandomForestRegressor. | Học trực tiếp quan hệ phi tuyến giữa cấu trúc mạch và thời gian chạy. |
 
 ---
@@ -88,35 +112,43 @@ Chạy toàn bộ test suite để xác nhận tính toàn vẹn của hệ th�
 pytest tests/ -v
 ```
 
-### 4.3. Chạy Thực Nghiệm Benchmark MQT Bench (CLI)
-Chạy thử nghiệm trên các thuật toán MQT Bench (`ghz, qft, dj, bv, grover, graphstate, wstate, ae`) với số qubit từ 2 đến 5 trên `FakeBelem`:
-```bash
-python -m qcirc_time_estimator.cli run-mqt-benchmark \
-  --benchmarks ghz,qft,dj,bv,grover,graphstate,wstate,ae \
-  --min-qubits 2 \
-  --max-qubits 5 \
-  --opt-level 1 \
-  --level indep \
-  --output-dir data/results/demo_run
+### 4.3. Cấu Hình Thực Nghiệm Trực Tiếp Trong Code (`config.py`)
+Toàn bộ cấu hình thực nghiệm được quản lý bằng Python code trong `src/qcirc_time_estimator/config.py`. Bạn không cần phải nhớ hay gõ bất kỳ cờ dòng lệnh CLI phức tạp nào.
+
+Bạn có thể chỉnh sửa `ACTIVE_CONFIG` hoặc tùy biến các tham số trong `ExperimentConfig`:
+```python
+from qcirc_time_estimator.config import ExperimentConfig
+
+my_config = ExperimentConfig(
+    mode="benchmark",  # hoặc "single_circuit"
+    benchmarks=["ghz", "qft", "grover"],
+    qubit_range=(2, 4),
+    optimization_level=1,
+    output_dir="data/results/my_run",
+)
 ```
 
-Kết quả xuất ra:
-- File dữ liệu chi tiết: `data/results/demo_run/benchmark_results.csv`
-- Bảng tổng kết metrics: `data/results/demo_run/summary_metrics.json`
-- Biểu đồ tương quan: `data/results/demo_run/correlation_plot.png`
-- Biểu đồ sai số theo thuật toán: `data/results/demo_run/error_by_algorithm.png`
-- Biểu đồ hệ số tăng tốc: `data/results/demo_run/speedup_plot.png`
+Các preset có sẵn trong code:
+- **`FAST_TEST_CONFIG`**: Chạy nhanh trên 3 thuật toán (`ghz, qft, grover`) từ 2 đến 3 qubit.
+- **`FULL_MQT_BENCHMARK_CONFIG`**: Chạy toàn diện 8 thuật toán trên dải 2..5 qubit.
+- **`SINGLE_CIRCUIT_CONFIG`**: Đánh giá chi tiết cho 1 mạch đơn lẻ (ví dụ QFT 3 qubit).
 
-### 4.4. Ước Tính Cho Một Mạch Lượng Tử Đơn Lẻ
-Ước tính thời gian thực thi của một thuật toán cụ thể từ MQT Bench:
+### 4.4. Chạy Thực Nghiệm (Không Cần Parser)
+Chạy thực nghiệm trực tiếp chỉ với một lệnh:
 ```bash
-python -m qcirc_time_estimator.cli estimate --benchmark-name qft --num-qubits 4 --level indep --opt-level 1
+python main.py
+# hoặc
+python -m qcirc_time_estimator
 ```
 
-Hoặc ước tính từ một file OpenQASM tùy ý:
-```bash
-python -m qcirc_time_estimator.cli estimate --qasm-file path/to/my_circuit.qasm --opt-level 1
-```
+Kết quả xuất ra (khi chạy ở chế độ benchmark):
+- File dữ liệu chi tiết: `data/results/<output_dir>/benchmark_results.csv`
+- Bảng tổng kết metrics: `data/results/<output_dir>/summary_metrics.json`
+- Biểu đồ tương quan: `data/results/<output_dir>/correlation_plot.png`
+- Biểu đồ sai số theo thuật toán: `data/results/<output_dir>/error_by_algorithm.png`
+- Biểu đồ hệ số tăng tốc: `data/results/<output_dir>/speedup_plot.png`
+
+Khi chạy ở chế độ `single_circuit`, kết quả so sánh chi tiết giữa Ground Truth và các Estimators (kèm theo phân rã $D_0, \Delta_{\text{1Q}}, \Delta_{\text{topo}}, \text{NewDepth}$) sẽ được in trực tiếp ra màn hình console.
 
 ---
 

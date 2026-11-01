@@ -1,11 +1,11 @@
 """Routing-aware duration estimator incorporating coupling graph SWAP overhead."""
 
 import time
-from typing import Dict, Tuple, List
+from typing import Dict
 from qiskit import QuantumCircuit
 from .base import BaseDurationEstimator, EstimationResult
 from .analytical import AnalyticalCriticalPathEstimator
-from ..backends.backend_info import BackendInfo
+from ..backends import BackendInfo
 
 
 class RoutingAwareEstimator(BaseDurationEstimator):

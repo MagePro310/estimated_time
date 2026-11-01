@@ -1,13 +1,13 @@
-"""Evaluation metrics, benchmark execution runner, and visualization."""
+"""Evaluation runner, metrics computation, and result visualizer."""
 
 from .metrics import compute_benchmark_metrics
-from .benchmark_runner import BenchmarkRunner, BenchmarkRunConfig
+from .runner import BenchmarkRunner, MultiBackendRunner
 from .visualizer import plot_benchmark_results
 
 __all__ = [
     "compute_benchmark_metrics",
     "BenchmarkRunner",
-    "BenchmarkRunConfig",
+    "MultiBackendRunner",
     "plot_benchmark_results",
 ]
 

@@ -1,7 +1,24 @@
-"""Hardware backend abstraction and FakeBelem loader."""
+"""Hardware backends, topology representation, and IBM FakeProvider integration."""
 
-from .backend_info import BackendInfo
-from .fake_belem import load_fake_belem_info
+from .info import BackendInfo
+from .provider import (
+    SAMPLE_BACKENDS,
+    get_fake_provider,
+    list_available_backends,
+    get_backend,
+    extract_backend_info,
+    load_backend_and_info,
+    load_fake_belem_info,
+)
 
-__all__ = ["BackendInfo", "load_fake_belem_info"]
+__all__ = [
+    "BackendInfo",
+    "SAMPLE_BACKENDS",
+    "get_fake_provider",
+    "list_available_backends",
+    "get_backend",
+    "extract_backend_info",
+    "load_backend_and_info",
+    "load_fake_belem_info",
+]
 

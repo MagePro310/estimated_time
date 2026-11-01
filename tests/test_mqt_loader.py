@@ -1,35 +1,36 @@
-"""Tests for MQT Bench circuit loader."""
+"""Unit tests for MQT Bench circuit loader integration."""
 
 import pytest
-from qiskit import QuantumCircuit
-from qcirc_time_estimator.circuits.mqt_loader import (
+from qcirc_time_estimator.circuits import (
+    list_available_benchmarks,
     load_mqt_circuit,
     get_benchmark_suite,
-    list_available_benchmarks,
 )
 
 
 def test_list_available_benchmarks():
-    b_names = list_available_benchmarks()
-    assert len(b_names) > 0
-    assert "ghz" in b_names
-    assert "qft" in b_names
+    """Verify that MQT bench returns standard algorithm names."""
+    benchmarks = list_available_benchmarks()
+    assert len(benchmarks) > 0
+    assert "ghz" in benchmarks
+    assert "qft" in benchmarks
+    assert "grover" in benchmarks
 
 
 def test_load_indep_circuit():
-    qc_ghz = load_mqt_circuit("ghz", circuit_size=3, level="indep")
-    assert isinstance(qc_ghz, QuantumCircuit)
-    assert qc_ghz.num_qubits == 3
-
-    qc_qft = load_mqt_circuit("qft", circuit_size=4, level="indep")
-    assert isinstance(qc_qft, QuantumCircuit)
-    assert qc_qft.num_qubits == 4
+    """Verify loading a hardware-independent circuit with specific qubit size."""
+    qc = load_mqt_circuit("ghz", circuit_size=3, level="indep")
+    assert qc.num_qubits == 3
+    assert qc.depth() > 0
 
 
 def test_get_benchmark_suite():
-    suite = get_benchmark_suite(benchmarks=["ghz", "dj"], qubit_range=(2, 3), level="indep")
-    assert len(suite) >= 2
-    for name, n_q, qc in suite:
-        assert isinstance(qc, QuantumCircuit)
-        assert 2 <= n_q <= 3
+    """Verify generating benchmark suite over specified algorithms and qubit sizes."""
+    algs = ["ghz", "qft"]
+    suite = get_benchmark_suite(benchmarks=algs, qubit_range=(2, 3), level="indep")
 
+    assert len(suite) == 4  # 2 algorithms * 2 qubit sizes (2, 3)
+    for name, n_q, qc in suite:
+        assert name in algs
+        assert n_q in (2, 3)
+        assert qc.num_qubits == n_q

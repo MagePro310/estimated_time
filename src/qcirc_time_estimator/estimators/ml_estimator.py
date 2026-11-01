@@ -1,13 +1,13 @@
 """Machine Learning surrogate model for quantum circuit duration estimation."""
 
 import time
-from typing import List, Dict, Any, Optional
+from typing import List
 import numpy as np
 from sklearn.ensemble import RandomForestRegressor
 from qiskit import QuantumCircuit
 from .base import BaseDurationEstimator, EstimationResult
 from .analytical import AnalyticalCriticalPathEstimator
-from ..backends.backend_info import BackendInfo
+from ..backends import BackendInfo
 
 
 class MLDurationEstimator(BaseDurationEstimator):

@@ -1,10 +1,9 @@
 """Integration with MQT Bench (Munich Quantum Toolkit) to load benchmark circuits."""
 
 import os
-from typing import List, Tuple, Optional, Dict
+from typing import List, Tuple, Optional
 from qiskit import QuantumCircuit
 from qiskit.qasm2 import dump
-import mqt.bench as mb
 from mqt.bench import get_benchmark, BenchmarkLevel
 from mqt.bench.benchmarks import get_available_benchmark_names
 
@@ -40,7 +39,7 @@ def load_mqt_circuit(
 
     Args:
         benchmark_name: Name of algorithm (e.g. 'ghz', 'qft', 'dj', 'grover').
-        circuit_size: Number of qubits (e.g. 2 to 5 for FakeBelem).
+        circuit_size: Number of qubits.
         level: BenchmarkLevel ('indep' by default, or 'alg').
         cache_dir: Optional directory to save/cache exported QASM file.
 
@@ -57,7 +56,6 @@ def load_mqt_circuit(
             with open(qasm_filename, "w", encoding="utf-8") as f:
                 dump(qc, f)
         except Exception:
-            # Fall back to str representation if qasm2 export encounters custom gates
             pass
 
     return qc
@@ -96,11 +94,9 @@ def get_benchmark_suite(
                     level=level,
                     cache_dir=cache_dir,
                 )
-                # Only keep circuits matching target size constraint
                 if qc.num_qubits <= max_q:
-                    suite.append((name, qc.num_qubits, qc))
-            except Exception as e:
-                # Some benchmark algorithms do not support certain qubit sizes (e.g. requires odd N or N >= 3)
+                    suite.append((name, size, qc))
+            except Exception:
                 continue
 
     return suite

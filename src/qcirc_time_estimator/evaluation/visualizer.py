@@ -21,11 +21,17 @@ def plot_benchmark_results(df: pd.DataFrame, metrics: Dict[str, Dict[str, float]
     generated_plots = []
 
     estimators = [k for k in metrics.keys()]
-    colors = {"analytical": "#1f77b4", "routing_aware": "#2ca02c", "ml_regressor": "#d62728"}
+    colors = {
+        "analytical": "#1f77b4",
+        "routing_aware": "#2ca02c",
+        "clops_depth": "#ff7f0e",
+        "clops_calibrated": "#9467bd",
+        "ml_regressor": "#d62728",
+    }
 
     # --- Plot 1: Correlation (Predicted vs Ground Truth) ---
     fig, axes = plt.subplots(1, len(estimators), figsize=(5.5 * len(estimators), 5), squeeze=False)
-    y_true_us = df["gt_duration_sec"] * 1e6  # convert to microseconds for human-friendly axis
+    y_true_us = df["gt_duration_sec"] * 1e6  # convert to microseconds
 
     for idx, est_key in enumerate(estimators):
         ax = axes[0, idx]
@@ -34,7 +40,6 @@ def plot_benchmark_results(df: pd.DataFrame, metrics: Dict[str, Dict[str, float]
 
         ax.scatter(y_true_us, y_pred_us, color=color, alpha=0.7, edgecolors="k", s=45, label="Circuits")
 
-        # Identity reference line
         all_vals = np.concatenate([y_true_us.values, y_pred_us.values])
         min_v, max_v = (min(all_vals) * 0.9, max(all_vals) * 1.1) if len(all_vals) else (0, 1)
         ax.plot([min_v, max_v], [min_v, max_v], "r--", linewidth=1.5, label="Perfect Match (y=x)")
@@ -58,7 +63,7 @@ def plot_benchmark_results(df: pd.DataFrame, metrics: Dict[str, Dict[str, float]
     if "benchmark_name" in df.columns:
         fig, ax = plt.subplots(figsize=(10, 5))
         bench_groups = df.groupby("benchmark_name")[[f"{k}_error_pct" for k in estimators]].mean()
-        
+
         x = np.arange(len(bench_groups.index))
         width = 0.8 / len(estimators)
 
@@ -74,7 +79,7 @@ def plot_benchmark_results(df: pd.DataFrame, metrics: Dict[str, Dict[str, float]
         ax.set_xticks(x)
         ax.set_xticklabels(bench_groups.index, rotation=30, ha="right")
         ax.set_ylabel("Mean Percentage Error (MAPE %)")
-        ax.set_title("Estimation Error Across MQT Benchmark Algorithms on FakeBelem")
+        ax.set_title("Estimation Error Across MQT Benchmark Algorithms")
         ax.legend()
         ax.grid(True, axis="y", linestyle=":", alpha=0.6)
 
@@ -92,18 +97,23 @@ def plot_benchmark_results(df: pd.DataFrame, metrics: Dict[str, Dict[str, float]
     bars = ax.bar(labels, speedups, color=[colors.get(k, "teal") for k in estimators], width=0.5)
     ax.set_ylabel("Speedup vs Qiskit Transpiler + Scheduler (x)")
     ax.set_title("Inference Speedup Factor")
-    ax.set_yscale("log")
-    ax.grid(True, axis="y", linestyle=":", alpha=0.6)
-
     for bar in bars:
         h = bar.get_height()
-        ax.text(bar.get_x() + bar.get_width() / 2.0, h * 1.1, f"{h:,.0f}x", ha="center", va="bottom", fontweight="bold")
-
+        ax.annotate(
+            f"{h:.0f}x",
+            xy=(bar.get_x() + bar.get_width() / 2, h),
+            xytext=(0, 3),
+            textcoords="offset points",
+            ha="center",
+            va="bottom",
+            fontweight="bold",
+        )
+    ax.grid(True, axis="y", linestyle=":", alpha=0.6)
     plt.tight_layout()
-    speedup_path = os.path.join(output_dir, "speedup_plot.png")
-    fig.savefig(speedup_path, dpi=300)
+    speed_path = os.path.join(output_dir, "speedup_plot.png")
+    fig.savefig(speed_path, dpi=300)
     plt.close(fig)
-    generated_plots.append(speedup_path)
+    generated_plots.append(speed_path)
 
     return generated_plots
 

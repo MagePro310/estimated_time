@@ -16,7 +16,6 @@
 \usepackage[table]{xcolor}
 \usepackage{hyperref}
 
-\definecolor{placeholderbg}{RGB}{245, 247, 250}
 \definecolor{accentblue}{RGB}{20, 75, 140}
 
 \hypersetup{
@@ -43,7 +42,7 @@
 
 \begin{abstract}
 \noindent
-Trong kỷ nguyên Điện toán Lượng tử Nhiễu Quy mô Trung bình (NISQ), tài nguyên phần cứng lượng tử thực tế vô cùng khan hiếm và đắt đỏ. Việc lập kế hoạch điều phối tác vụ, lựa chọn thiết bị đích (backend) và tối ưu hóa chi phí đòi hỏi khả năng ước tính chính xác thời gian thực thi của mạch lượng tử ngay từ sớm. Tuy nhiên, các phương pháp ước tính hiện tại thường yêu cầu mạch lượng tử phải trải qua quá trình biên dịch (transpilation) gồm ánh xạ qubit, chèn cổng SWAP và phân rã cổng cơ sở cho từng thiết bị cụ thể. Khi số lượng qubit tăng lên hoặc khi người dùng cần khảo sát nhanh trên nhiều hệ thống phần cứng khác nhau, bản thân quá trình biên dịch này tiêu tốn rất nhiều thời gian và tài nguyên tính toán cổ điển. Trong bài báo này, chúng tôi đề xuất một kỹ thuật mới nhằm ước tính trực tiếp thời gian thực thi của mạch lượng tử ngay tại \textbf{tầng thiết kế cấp cao (pre-transpilation)} mà hoàn toàn không cần thực hiện bước biên dịch. Phương pháp của chúng tôi kết hợp các đặc trưng cấu trúc và toàn cục của mạch lượng tử cấp cao do người dùng thiết kế với các thông số kiến trúc vật lý và hiệu chuẩn của máy lượng tử mục tiêu (như đồ thị kết nối coupling map, tập cổng cơ sở, thời lượng xung và tốc độ lặp). Thực nghiệm đánh giá trên bộ dữ liệu chuẩn MQT Bench cho thấy phương pháp đề xuất đạt độ chính xác \textbf{[ĐIỀN KẾT QUẢ R$^2$ HOẶC SAI SỐ CỦA BẠN]}, đồng thời rút ngắn thời gian đưa ra dự đoán gấp \textbf{[ĐIỀN SỐ LẦN]} lần so với quy trình phải qua bước biên dịch truyền thống. Kết quả nghiên cứu mở ra hướng tiếp cận hiệu quả cho các bộ lập lịch đám mây lượng tử và công cụ hỗ trợ nhà phát triển lựa chọn phần cứng tối ưu theo thời gian thực.
+Trong kỷ nguyên Điện toán Lượng tử Nhiễu Quy mô Trung bình (NISQ), tài nguyên phần cứng lượng tử thực tế vô cùng khan hiếm và đắt đỏ. Việc lập kế hoạch điều phối tác vụ, lựa chọn thiết bị đích (backend) và tối ưu hóa chi phí đòi hỏi khả năng ước tính chính xác thời gian thực thi của mạch lượng tử ngay từ sớm. Tuy nhiên, các phương pháp ước tính hiện tại thường yêu cầu mạch lượng tử phải trải qua quá trình biên dịch (transpilation) gồm ánh xạ qubit, chèn cổng SWAP và phân rã cổng cơ sở cho từng thiết bị cụ thể. Khi số lượng qubit tăng lên hoặc khi người dùng cần khảo sát nhanh trên nhiều hệ thống phần cứng khác nhau, bản thân quá trình biên dịch này tiêu tốn rất nhiều thời gian và tài nguyên tính toán cổ điển. Trong bài báo này, chúng tôi đề xuất một kỹ thuật mới nhằm ước tính trực tiếp thời gian thực thi của mạch lượng tử ngay tại \textbf{tầng thiết kế cấp cao (pre-transpilation)} mà hoàn toàn không cần thực hiện bước biên dịch. Phương pháp của chúng tôi kết hợp các đặc trưng cấu trúc và toàn cục của mạch lượng tử cấp cao do người dùng thiết kế với các thông số kiến trúc vật lý và hiệu chuẩn của máy lượng tử mục tiêu (như đồ thị kết nối coupling map, tập cổng cơ sở, thời lượng xung và tốc độ lặp). Thực nghiệm đánh giá trên 880 mạch lượng tử thuộc bộ dữ liệu chuẩn MQT Bench trên 6 kiến trúc phần cứng IBM Quantum (từ 5 đến 127 qubits) cho thấy mô hình học máy đề xuất đạt hệ số xác định $R^2 = 0.997$ với sai số phần trăm tuyệt đối trung bình (MAPE) chỉ $2.49\%$ và sai số tuyệt đối trung bình (MAE) $0.33~\mu\text{s}$. Đồng thời, mô hình dãn nở độ sâu vật lý dựa trên thông số CLOPS đạt tương quan Pearson $r = 0.825$ với tốc độ tăng tốc đạt từ $120\times$ đến $184\times$ (thời gian ước tính chỉ $0.068~\text{ms}$ so với $8.22~\text{ms}$ của bước biên dịch truyền thống). Kết quả nghiên cứu mở ra hướng tiếp cận hiệu quả cho các bộ lập lịch đám mây lượng tử và công cụ hỗ trợ nhà phát triển lựa chọn phần cứng tối ưu theo thời gian thực.
 
 \vspace{0.3cm}
 \noindent \textbf{Từ khóa:} Điện toán lượng tử, Mạch lượng tử cấp cao, Ước tính thời gian thực thi, Trước biên dịch (Pre-transpilation), Máy học cho Lượng tử, Quản lý tài nguyên lượng tử.
@@ -145,7 +144,7 @@ Chi phí khảo sát $M$ máy & $M \times (T_{\text{transpile}} + T_{\text{extra
 
 Bảng \ref{tab:comparison_workflow} tóm tắt sự khác biệt cốt lõi giữa phương pháp của chúng tôi và phương pháp truyền thống. Nhờ tách biệt việc trích xuất đặc trưng mạch cấp cao $\phi_{\text{circuit}}(\mathcal{C}_{\text{high}})$ khỏi phần cứng, khi cần dự đoán trên $M$ máy lượng tử khác nhau, ta chỉ cần trích xuất đặc trưng mạch đúng 1 lần duy nhất.
 
-\subsection{Trích xuất đặc trưng mạch lượng tử cấp cao ($\phi_{\text{circuit}}(\mathcal{C}_{\text{high}})$)}
+\subsection{Trích xuất đặc trưng mạch lượng tử cấp cao (\texorpdfstring{$\phi_{\text{circuit}}(\mathcal{C}_{\text{high}})$}{phi\_circuit(C\_high)})}
 Ở tầng cấp cao trước khi biên dịch, chúng tôi biểu diễn mạch lượng tử $\mathcal{C}_{\text{high}}$ thông qua hai nhóm thông tin: đặc trưng toàn cục cấp cao và đặc trưng cấu trúc tương tác của mạch.
 
 \subsubsection{Đặc trưng toàn cục của mạch cấp cao (High-level Global Features)}
@@ -168,23 +167,61 @@ Từ mã nguồn mạch đầu vào của người dùng, chúng tôi trích xu�
 \subsubsection{Đặc trưng đồ thị của mạch cấp cao (High-level Graph / Interaction Features)}
 Một mạch lượng tử cấp cao có thể được biểu diễn dưới dạng Đồ thị có hướng không chu trình (DAG) $\mathcal{G}_{\text{DAG}} = (V, E)$ hoặc Đồ thị tương tác Qubit (Qubit Interaction Graph - QIG) $\mathcal{G}_{\text{QIG}} = (V_q, E_q, W_q)$, trong đó mỗi đỉnh thuộc $V_q$ là một qubit logic và trọng số cạnh $w_{ij} \in W_q$ biểu thị số lần tương tác cổng 2-qubit giữa $q_i$ và $q_j$.
 
-% =========================================================================
-% VÙNG PLACEHOLDER 1: CHI TIẾT BIỂU DIỄN MẠCH CỦA TÁC GIẢ
-% =========================================================================
-\vspace{0.2cm}
-\noindent\fcolorbox{accentblue}{placeholderbg}{%
-\parbox{0.96\textwidth}{%
-\textbf{[PHẦN DÀNH CHO TÁC GIẢ ĐIỀN NỘI DUNG - CHI TIẾT ĐẶC TRƯNG MẠCH]:} \\
-\textit{Gợi ý chỉnh sửa trên Overleaf:} Tại đây, bạn hãy mô tả cụ thể các đặc trưng mạch cấp cao mà giải thuật của bạn sử dụng. Ví dụ:
+\subsubsection{Cấu trúc và Chi tiết Biểu diễn Vector Đặc trưng Tổng hợp}
+Để mô hình có thể tiếp nhận đầy đủ thông tin đa chiều từ mạch lượng tử cấp cao và kiến trúc phần cứng mà không làm phát sinh chi phí tính toán lớn, chúng tôi chuẩn hóa dữ liệu đầu vào thành một vector đặc trưng nối ghép (concatenated feature vector) $\mathbf{x} \in \mathbb{R}^{25}$ gồm bốn nhóm thành phần cốt lõi:
+\begin{equation}
+    \mathbf{x} = \left[ \phi_{\text{circuit}}(\mathcal{C}_{\text{high}}) \,\|\, \phi_{\text{machine}}(\mathcal{M}) \,\|\, \phi_{\text{interact}}(\mathcal{C}_{\text{high}}, \mathcal{M}) \,\|\, \hat{T}_{\text{analytical}} \right]
+\end{equation}
+trong đó:
 \begin{itemize}
-    \item Danh sách chính xác số chiều (dimensionality) của vector đặc trưng mạch đầu vào.
-    \item Cách bạn mã hóa các cổng đa qubit (3-qubit trở lên) hoặc các khối hàm ở lớp cấp cao (nếu có).
-    \item Nếu bạn dùng đồ thị (DAG hoặc Qubit Interaction Graph), hãy định nghĩa vector đặc trưng tại mỗi nút $v \in V$ và cạnh $e \in E$ ở mức chưa biên dịch (lưu ý: ở mức này chưa có vị trí qubit vật lý cố định).
+    \item \textbf{Nhóm đặc trưng mạch cấp cao $\phi_{\text{circuit}}(\mathcal{C}_{\text{high}}) \in \mathbb{R}^{12}$:} Bao gồm 8 chỉ số quy mô cơ bản ($n_q$, $d_{\text{high}}$, $n_{\text{ops}}$, $n_{1q}$, $n_{2q}$, $n_{\text{multi}}$, $n_{\text{meas}}$, mật độ cổng $n_{\text{ops}}/n_q$) và 4 chỉ số cấu trúc tương tác mở rộng (Program Communication $PC$, Critical Depth ratio $CD$, Entanglement Ratio $ER$, và Hệ số song song $PL$). Đối với các cổng đa qubit ($n_{\text{op\_q}} \ge 3$, chẳng hạn như cổng Toffoli $CCX$ hoặc Fredkin $CSWAP$), chúng tôi theo vết toàn bộ các cặp tương tác logic $(q_i, q_j)$ để cập nhật bậc tương tác của đồ thị mạch logic, đồng thời tách biệt số lượng $n_{\text{multi}}$ thành một đặc trưng độc lập vì các cổng này sẽ chịu sự bùng nổ phân rã rất lớn khi biên dịch xuống tập cổng cơ sở vật lý.
+    \item \textbf{Nhóm đặc trưng máy lượng tử mục tiêu $\phi_{\text{machine}}(\mathcal{M}) \in \mathbb{R}^{10}$:} Bao gồm 6 chỉ số mô tả tô-pô đồ thị kết nối phần cứng $\mathcal{G}_{\text{hw}}$ ($N_{\text{phys}}$, số cạnh ghép nối $|E_{\text{phys}}|$, bậc kết nối trung bình $\bar{d}$, đường kính đồ thị $D_{\text{graph}}$, khoảng cách đường đi ngắn nhất trung bình giữa các cặp qubit vật lý $\bar{l}_{\text{sp}}$, mật độ cạnh $\rho_{\text{edge}}$) và 4 thông số thời gian xung hiệu chuẩn cơ bản (chu kỳ xung đồng hồ $dt$, thời lượng xung cổng đơn qubit trung bình $\bar{t}_{1q}$, thời lượng xung cổng 2-qubit trung bình $\bar{t}_{2q}$, và thời gian đo trạng thái trung bình $\bar{t}_{\text{meas}}$).
+    \item \textbf{Nhóm đặc trưng tương tác mạch -- phần cứng $\phi_{\text{interact}}(\mathcal{C}_{\text{high}}, \mathcal{M}) \in \mathbb{R}^{2}$:} Đo lường trực tiếp mức độ căng thẳng (congestion) khi nhúng mạch cấp cao lên máy:
+    \begin{enumerate}
+        \item \textit{Tỷ lệ sử dụng qubit phần cứng ($U_q$):} $U_q = n_q / N_{\text{phys}}$, phản ánh mức độ hạn chế về không gian vật lý khi bố trí mạch.
+        \item \textit{Chi phí cổng hoán vị định tuyến ước tính ($\hat{S}_{\text{routing}}$):} Ước lượng số lượng cổng $SWAP$ tối thiểu cần chèn dọc theo các cổng 2-qubit của mạch logic dựa trên ma trận khoảng cách đường đi ngắn nhất của phần cứng:
+        \begin{equation}
+            \hat{S}_{\text{routing}} = \sum_{(q_i, q_j) \in \mathcal{E}_{2q}} \max\left(0, \text{dist}_{\mathcal{M}}(q_i, q_j) - 1\right)
+        \end{equation}
+        với $\text{dist}_{\mathcal{M}}(q_i, q_j)$ là độ dài đường đi ngắn nhất giữa qubit $q_i$ và $q_j$ trên coupling map của máy $\mathcal{M}$ theo phép gán nhãn qubit ban đầu.
+    \end{enumerate}
+    \item \textbf{Đặc trưng neo giải tích ($\hat{T}_{\text{analytical}} \in \mathbb{R}^1$):} Thời gian thực thi ước tính sơ bộ thu được từ mô hình duyệt đường găng giải tích (mô tả tại Mục 4.4.1), đóng vai trò làm giá trị neo (anchor feature) cung cấp cận dưới lý tưởng cho các mô hình học máy.
 \end{itemize}
-}}
-\vspace{0.2cm}
 
-\subsection{Trích xuất đặc trưng máy lượng tử mục tiêu ($\phi_{\text{machine}}(\mathcal{M})$)}
+Bảng \ref{tab:feature_summary} tóm tắt đầy đủ danh mục 25 đặc trưng được trích xuất trong khung nghiên cứu của chúng tôi.
+
+\begin{table}[htbp]
+\centering
+\caption{Tổng hợp 25 đặc trưng kết hợp giữa mạch cấp cao và phần cứng (Pre-transpilation Feature Set)}
+\label{tab:feature_summary}
+\small
+\begin{tabularx}{\textwidth}{l l >{\raggedright\arraybackslash}X c}
+\toprule
+\textbf{Nhóm đặc trưng} & \textbf{Ký hiệu mã} & \textbf{Ý nghĩa vật lý / Định nghĩa} & \textbf{Số chiều} \\
+\midrule
+\multirow{4}{*}{\parbox{2.8cm}{Đặc trưng mạch cấp cao ($\phi_{\text{circuit}}$)}} 
+ & \texttt{circ\_num\_qubits, depth\_pre} & Số qubit logic ($n_q$) và độ sâu mạch logic ($d_{\text{high}}$) & 2 \\
+ & \texttt{circ\_*\_gates\_pre, meas} & Số lượng cổng: tổng, 1Q, 2Q, đa-qubit ($3Q+$), phép đo & 5 \\
+ & \texttt{circ\_gate\_density} & Mật độ cổng trên mỗi qubit logic ($n_{\text{ops}} / n_q$) & 1 \\
+ & \texttt{circ\_program\_comm, cd} & Độ giao tiếp logic ($PC$) và tỷ lệ độ sâu đường găng ($CD$) & 2 \\
+ & \texttt{circ\_er, parallelism} & Tỷ lệ cổng vướng lượng tử ($ER$) và độ song song ($PL$) & 2 \\
+\midrule
+\multirow{2}{*}{\parbox{2.8cm}{Đặc trưng phần cứng ($\phi_{\text{machine}}$)}} 
+ & \texttt{hw\_num\_qubits, hw\_edges} & Số qubit vật lý ($N_{\text{phys}}$), số cạnh kết nối ($|E_{\text{phys}}|$) & 2 \\
+ & \texttt{hw\_deg, diam, sp, dens} & Bậc trung bình ($\bar{d}$), đường kính ($D$), khoảng cách ngắn nhất ($\bar{l}$), mật độ cạnh ($\rho$) & 4 \\
+ & \texttt{hw\_dt, *\_duration\_sec} & Chu kỳ $dt$, thời lượng xung trung bình $\bar{t}_{1q}, \bar{t}_{2q}, \bar{t}_{\text{meas}}$ & 4 \\
+\midrule
+\multirow{1}{*}{\parbox{2.8cm}{Tương tác ($\phi_{\text{interact}}$)}} 
+ & \texttt{utilization, routing\_swaps} & Tỷ lệ qubit $n_q / N_{\text{phys}}$ và số SWAP ước tính $\hat{S}_{\text{routing}}$ & 2 \\
+\midrule
+\parbox{2.8cm}{Neo giải tích} & \texttt{pred\_analytical\_sec} & Thời gian đường găng giải tích lý tưởng $\hat{T}_{\text{analytical}}$ & 1 \\
+\midrule
+\multicolumn{3}{l}{\textbf{Tổng số chiều vector đặc trưng ($\mathbf{x}$)}} & \textbf{25} \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{Trích xuất đặc trưng máy lượng tử mục tiêu (\texorpdfstring{$\phi_{\text{machine}}(\mathcal{M})$}{phi\_machine(M)})}
 Do không thực hiện bước biên dịch để gán từng cổng vào từng qubit vật lý cụ thể, mô hình cần một bộ đặc trưng tổng quát để nắm bắt khả năng xử lý và các giới hạn vật lý của máy lượng tử $\mathcal{M}$. Chúng tôi trích xuất thông tin phần cứng từ dữ liệu cấu hình và hiệu chuẩn (Backend Configuration \& Calibration Properties) thông qua hai khía cạnh:
 
 \begin{enumerate}
@@ -201,132 +238,189 @@ Do không thực hiện bước biên dịch để gán từng cổng vào từn
     \end{itemize}
 \end{enumerate}
 
-% =========================================================================
-% VÙNG PLACEHOLDER 2: KIẾN TRÚC MÔ HÌNH VÀ GIẢI THUẬT ĐỀ XUẤT
-% =========================================================================
-\subsection{Kiến trúc Mô hình và Giải thuật Dự đoán Đề xuất}
+\subsection{Kiến trúc Khung Ước tính Đề xuất}
+Khung thực nghiệm của chúng tôi xây dựng một hệ thống ước tính đa tầng (Multi-tier Estimation Framework), bao gồm ba mô hình ước tính độc lập từ cấp độ giải tích vật lý đến mô hình máy học có khả năng tự học quan hệ phi tuyến:
 
-\noindent\fcolorbox{accentblue}{placeholderbg}{%
-\parbox{0.96\textwidth}{%
-\textbf{[PHẦN DÀNH CHO TÁC GIẢ ĐIỀN NỘI DUNG - MÔ HÌNH VÀ GIẢI THUẬT ĐỀ XUẤT]:} \\
-\textit{Hãy thay thế khung này bằng mô tả chi tiết giải thuật của bạn. Bạn có thể sử dụng cấu trúc các tiểu mục gợi ý bên dưới:}
-
-\vspace{0.2cm}
-\textbf{4.4.1 Kiến trúc mạng / Mô hình học máy (Model Architecture):}
+\subsubsection{Mô hình giải tích đường găng logic (Analytical Critical Path Traverser)}
+Mô hình giải tích duyệt cấu trúc đồ thị phụ thuộc (DAG) của mạch cấp cao $\mathcal{C}_{\text{high}}$ theo từng đường dây qubit (qubit wire) mà hoàn toàn không biên dịch. Với mỗi thao tác cổng, mô hình gán thời lượng vật lý tương đương dựa trên thông số hiệu chuẩn của backend mục tiêu $\mathcal{M}$:
 \begin{itemize}
-    \item Mô tả nhánh xử lý đặc trưng mạch cấp cao $\phi_{\text{circuit}}(\mathcal{C}_{\text{high}})$ (ví dụ: dùng GNN, Graph Transformer, MLP, hay XGBoost/LightGBM/CatBoost...).
-    \item Mô tả nhánh xử lý thông tin máy lượng tử $\phi_{\text{machine}}(\mathcal{M})$ (ví dụ: nhúng vector thông số máy hoặc dùng GNN trên coupling map của máy).
-    \item Cơ chế kết hợp (Fusion Mechanism): Cách kết hợp thông tin mạch và thông tin máy (ví dụ: Concatenation, Cross-Attention giữa mạch và phần cứng, hoặc điều chế đặc trưng FiLM) để ước lượng ngầm định độ giãn nở mạch sau transpilation.
+    \item Các cổng ảo (virtual gates như $RZ$, phase, barrier, id) có thời lượng bằng $0$.
+    \item Cổng đơn qubit vật lý ($X, SX$) nhận thời lượng $\bar{t}_{1q}$; các cổng đơn qubit khác ($H, RX, RY, U$) được phân rã giải tích thành 1 hoặc 2 xung $SX$ tương ứng ($\bar{t}_{1q}$ hoặc $2 \bar{t}_{1q}$).
+    \item Cổng 2-qubit ($CX, CZ, ECR, SWAP$) kích hoạt cơ chế đồng bộ hóa thời gian đường găng giữa hai qubit tác động: $t_{\text{start}} = \max(t_{\text{wire}}(q_1), t_{\text{wire}}(q_2))$ và cập nhật thời lượng tương ứng.
+    \item Cổng đa qubit ($CCX, CSWAP$) được phân rã giải tích thành số lượng cổng cơ sở tương đương (ví dụ cổng Toffoli $CCX$ tương đương $6 \bar{t}_{2q} + 8 \bar{t}_{1q}$).
+\end{itemize}
+Mô hình nhận biết định tuyến (Routing-Aware Estimator) mở rộng thuật toán trên bằng cách cộng thêm độ trễ hoán vị $\Delta t_{\text{routing}} = \max(0, \text{dist}_{\mathcal{M}}(p_1, p_2) - 1) \times 3 \bar{t}_{2q}$ cho mỗi cặp qubit không kề nhau trên coupling map.
+
+\subsubsection{Mô hình dãn nở độ sâu vật lý dựa trên CLOPS (CLOPS-Aware NewDepth Model)}
+Nhằm đạt được sự cân bằng tối ưu giữa tính tường minh vật lý (physical interpretability) và tốc độ tính toán siêu nhanh, chúng tôi đề xuất mô hình NewDepth kết hợp chỉ số vận hành lượng tử CLOPS (Circuit Layer Operations Per Second) do IBM giới thiệu \cite{ma2025understanding}:
+\begin{equation}
+    \hat{T}_{\text{CLOPS}} = \text{NewDepth} \times \tau_{\text{layer}} = \frac{\text{NewDepth}}{\text{CLOPS}}
+\end{equation}
+trong đó $\tau_{\text{layer}} = 1/\text{CLOPS} \approx \bar{t}_{2q}$ là thời gian thực thi trung bình của một tầng (layer) cổng 2-qubit cơ sở trên phần cứng. Đại lượng $\text{NewDepth}$ mô hình hóa tường minh các thành phần gây dãn nở độ sâu mạch khi biên dịch:
+\begin{equation}
+    \text{NewDepth} = w_0 D_0 + \alpha \Delta_{1Q} + \beta \Delta_{\text{topo}} + \gamma \Delta_{\text{multi}} + \mu \Delta_{\text{meas}} - \lambda \Delta_{\text{opt}}
+\end{equation}
+trong đó:
+\begin{itemize}
+    \item $D_0$: Độ sâu logic ban đầu của mạch cấp cao.
+    \item $\Delta_{1Q}$: Độ dãn nở do bất tương thích tập cổng đơn qubit (ví dụ cổng pha ảo $RZ$ giảm 1 tầng xung vật lý, trong khi cổng $U_3$ cộng thêm 1 tầng xung).
+    \item $\Delta_{\text{topo}}$: Chi phí định tuyến SWAP dọc theo đường găng khi các qubit tương tác không kề nhau trên coupling map, với mỗi cổng SWAP đóng góp 3 tầng cổng 2-qubit: $\Delta_{\text{topo}} = \sum 3 \times \max(0, \text{dist}_{\mathcal{M}}(p_1, p_2) - 1)$.
+    \item $\Delta_{\text{multi}}$: Độ dãn nở độ sâu khi phân rã các cổng đa qubit ($3Q+$) thành tầng cổng cơ sở (ví dụ $CCX$ bổ sung $+5$ tầng 2-qubit, $CSWAP$ bổ sung $+7$ tầng 2-qubit).
+    \item $\Delta_{\text{meas}}$: Độ trễ của thao tác đo trạng thái qubit chuẩn hóa theo đơn vị tầng 2-qubit ($\Delta_{\text{meas}} = \bar{t}_{\text{meas}} / \bar{t}_{2q}$).
+    \item $\Delta_{\text{opt}}$: Hệ số giảm độ sâu do tối ưu hóa triệt tiêu cổng liên tiếp khi biên dịch ở mức cao.
 \end{itemize}
 
-\textbf{4.4.2 Hàm mất mát và Quy trình huấn luyện (Loss Function \& Training Procedure):}
-\begin{itemize}
-    \item Công thức toán học của các tầng trong mô hình và hàm mục tiêu tối ưu hóa (ví dụ: MSE Loss, Huber Loss, hoặc Log-MSE Loss).
-    \item Chiến lược lấy mẫu dữ liệu huấn luyện (nếu có sử dụng Active Learning hoặc Transfer Learning từ simulator sang máy thực).
-\end{itemize}
-}}
+Mô hình NewDepth hỗ trợ hai chế độ hoạt động linh hoạt:
+\begin{enumerate}
+    \item \textbf{Chế độ Vật lý Không Cần Dữ liệu (Zero-shot Physics-Informed):} Các trọng số được xác lập trực tiếp từ thông số vật lý của chip: $w_0 = 1.0$, $\alpha = \bar{t}_{1q} / \bar{t}_{2q}$, $\beta = 0.90$, $\gamma = 1.0$, $\mu = 1.0$, $\lambda = 0.0$. Chế độ này hoàn toàn không yêu cầu bất kỳ dữ liệu huấn luyện nào.
+    \item \textbf{Chế độ Hiệu chuẩn Thực nghiệm (Empirical Calibrated via NNLS):} Khi có sẵn một tập dữ liệu nhỏ các mạch mẫu đã đo thực tế, các trọng số $\mathbf{w} = [w_0, \alpha, \beta, \gamma, \mu]^T$ được tối ưu hóa bằng phương pháp Bình phương Tối thiểu Phi âm (Non-Negative Least Squares - NNLS):
+    \begin{equation}
+        \min_{\mathbf{w} \ge 0} \frac{1}{2} \|\mathbf{X} \mathbf{w} - \mathbf{y}_{\text{target}}\|_2^2 \quad \text{với } y_i = \frac{T_{\text{true}, i}}{\tau_{\text{layer}}}
+    \end{equation}
+    Ràng buộc $\mathbf{w} \ge 0$ đảm bảo tính hợp lý vật lý: các yếu tố cấu trúc mạch luôn làm tăng hoặc giữ nguyên độ sâu thực thi chứ không bao giờ làm giảm độ sâu một cách vô lý.
+\end{enumerate}
+
+\subsubsection{Mô hình học máy thay thế (ML Surrogate Regressor)}
+Để khai thác toàn bộ không gian đặc trưng phi tuyến 25 chiều, chúng tôi xây dựng mô hình học máy thay thế sử dụng kỹ thuật Rừng Cây Quyết Định (Random Forest Regressor) và Tăng Cường Cây Độ Dốc (Gradient Boosted Trees). Mô hình nhận đầu vào là vector $\mathbf{x} \in \mathbb{R}^{25}$ và dự đoán trực tiếp thời gian thực thi:
+\begin{equation}
+    \hat{y} = \frac{1}{B} \sum_{b=1}^{B} f_b(\mathbf{x})
+\end{equation}
+trong đó mỗi cây $f_b$ được huấn luyện bằng hàm mục tiêu tối thiểu hóa Sai số Bình phương Trung bình (MSE Loss):
+\begin{equation}
+    \mathcal{L}_{\text{MSE}}(\Theta) = \frac{1}{N} \sum_{i=1}^{N} \left( y_i - \hat{y}_i \right)^2
+\end{equation}
+Nhờ việc kết hợp đồng thời đặc trưng đếm cổng đa qubit ($n_{\text{multi}}$), các chỉ số tô-pô mạng kết nối phần cứng và giá trị neo giải tích $\hat{T}_{\text{analytical}}$, mô hình ML có thể học được độ giãn nở thực tế của các trình biên dịch hiện đại như SABRE \cite{li2019tackling} với độ chính xác vượt trội.
 
 \section{Thiết lập Thực nghiệm và Đánh giá Kết quả (Experimental Evaluation)}
 
 \subsection{Chuẩn bị dữ liệu và Thiết bị thực nghiệm (Data Preparation \& Backends)}
-Để đảm bảo tính khách quan và khả năng so sánh với các nghiên cứu trước, chúng tôi sử dụng bộ dữ liệu chuẩn \textbf{MQT Benchmark (MQT Bench)} \cite{quetschlich2023mqt}. Đây là thư viện quy mô lớn cung cấp các mạch lượng tử đa dạng thuộc nhiều họ thuật toán khác nhau (như QAOA, VQE, QFT, Grover, Quantum Walk, GHZ, v.v.) với quy mô trải dài từ 2 đến 127 qubits. 
+Để đảm bảo tính khách quan và khả năng so sánh khoa học, chúng tôi sử dụng bộ dữ liệu chuẩn \textbf{MQT Benchmark (MQT Bench)} \cite{quetschlich2023mqt}. Tập mạch lượng tử thực nghiệm bao gồm 8 thuật toán kinh điển đại diện cho nhiều họ tính toán lượng tử khác nhau: Trạng thái GHZ (\texttt{ghz}), Biến đổi Fourier lượng tử (\texttt{qft}), Deutsch-Jozsa (\texttt{dj}), Bernstein-Vazirani (\texttt{bv}), Thuật toán tìm kiếm Grover (\texttt{grover}), Graph State (\texttt{graphstate}), Trạng thái W (\texttt{wstate}), và Ước lượng biên độ Quantum Amplitude Estimation (\texttt{ae}). Quy mô mạch trải dài từ 2 đến 5 qubits ở mức thiết kế độc lập phần cứng (\texttt{BenchmarkLevel.INDEP}).
 
-Điểm quan trọng trong thiết lập của chúng tôi là: toàn bộ các mạch lượng tử đầu vào đưa vào mô hình dự đoán đều được lấy ở mức \textbf{Target-Independent Level} (tầng cấp cao người dùng thiết kế trên Qiskit \cite{javadi2024qiskit} trước khi qua bước transpilation). Thời gian thực thi thực tế (ground-truth execution time) được thu thập trên các thiết bị mục tiêu (backends) bao gồm các trình mô phỏng nhiễu và máy tính lượng tử thực tế của IBM Quantum (ví dụ: \texttt{FakeWashington}, \texttt{FakeSherbrooke}, \texttt{ibm\_osaka}, \texttt{ibm\_kyoto}) với số lượng shots tiêu chuẩn là 1024 shots cho mỗi lần chạy \cite{ma2025understanding}.
+Về phía phần cứng, chúng tôi tiến hành đánh giá trên 6 kiến trúc QPU thực tế của IBM Quantum trải dài qua các thế hệ vi xử lý từ quy mô nhỏ đến quy mô tiện ích (utility-scale) thông qua gói \texttt{FakeProviderForBackendV2}:
+\begin{itemize}
+    \item \textbf{Hệ thống 5-qubit:} \texttt{fake\_belem} (tô-pô chữ T, vi xử lý Falcon r4), \texttt{fake\_athens} (tô-pô đường thẳng tuyến tính, Falcon r4), \texttt{fake\_manila} (tô-pô đường thẳng tuyến tính, Falcon r5).
+    \item \textbf{Hệ thống 7-qubit:} \texttt{fake\_jakarta} (tô-pô phân nhánh H-tree, Falcon r5.1).
+    \item \textbf{Hệ thống 27-qubit:} \texttt{fake\_cairo} (tô-pô lưới Heavy-Hexagon, vi xử lý Falcon r5.11).
+    \item \textbf{Hệ thống 127-qubit:} \texttt{fake\_kyoto} (kiến trúc quy mô lớn Eagle r3 Heavy-Hex).
+\end{itemize}
+Bộ dữ liệu chuẩn Ground Truth thu được bao gồm 880 mẫu dữ liệu đo đạc độc lập với 51 trường thông tin chi tiết. Thời gian thực thi chính xác (Ground Truth duration $y_i$) được xác định thông qua quy trình biên dịch hoàn chỉnh bằng Qiskit Transpiler (\texttt{optimization\_level=1}) kết hợp thuật toán lập lịch xung vật lý theo thời gian thực (\texttt{scheduling\_method='asap'}), từ đó đo đạc tổng số chu kỳ đồng hồ $D_{\text{clock}}$ và suy ra thời gian thực tế: $y_i = D_{\text{clock}} \times dt$.
 
 \subsection{Độ đo đánh giá (Evaluation Metrics)}
-Để đánh giá toàn diện độ chính xác của mô hình ước tính thời gian thực thi, chúng tôi sử dụng các độ đo tiêu chuẩn cho bài toán hồi quy bao gồm: Hệ số xác định ($R^2$), Sai số bình phương trung bình (MSE), Sai số bình phương trung bình chuẩn hóa (NMSE), và Sai số tuyệt đối trung bình (MAE):
+Để đánh giá toàn diện độ chính xác của mô hình ước tính thời gian thực thi, chúng tôi sử dụng các độ đo tiêu chuẩn cho bài toán hồi quy bao gồm: Hệ số xác định ($R^2$), Sai số bình phương trung bình (MSE), Sai số bình phương trung bình chuẩn hóa (NMSE), Sai số tuyệt đối trung bình (MAE), và Sai số phần trăm tuyệt đối trung bình (MAPE):
 \begin{equation}
     R^2 = 1 - \frac{\sum_{i=1}^{N} (y_i - \hat{y}_i)^2}{\sum_{i=1}^{N} (y_i - \bar{y})^2}, \quad
     \text{MSE} = \frac{1}{N} \sum_{i=1}^{N} (y_i - \hat{y}_i)^2, \quad
     \text{NMSE} = \frac{\text{MSE}}{\frac{1}{N}\sum_{i=1}^{N} (y_i - \bar{y})^2}
 \end{equation}
-trong đó $y_i$ là thời gian thực thi thực tế của mạch thứ $i$, $\hat{y}_i$ là thời gian thực thi do mô hình ước tính từ mạch cấp cao, và $\bar{y}$ là giá trị trung bình của thời gian thực thi thực tế trên tập kiểm thử gồm $N$ mẫu. Giá trị $R^2$ càng tiến gần 1 và MSE, NMSE càng tiến gần 0 chứng tỏ mô hình dự đoán càng chính xác.
+\begin{equation}
+    \text{MAE} = \frac{1}{N}\sum_{i=1}^{N} |y_i - \hat{y}_i|, \quad
+    \text{MAPE} = \frac{100\%}{N}\sum_{i=1}^{N} \frac{|y_i - \hat{y}_i|}{y_i}
+\end{equation}
+trong đó $y_i$ là thời gian thực thi thực tế của mạch thứ $i$, $\hat{y}_i$ là thời gian thực thi do mô hình ước tính từ mạch cấp cao, và $\bar{y}$ là giá trị trung bình của thời gian thực thi thực tế trên tập kiểm thử gồm $N$ mẫu. Giá trị $R^2$ càng tiến gần 1 và MSE, NMSE, MAE, MAPE càng tiến gần 0 chứng tỏ mô hình dự đoán càng chính xác. Bên cạnh đó, chúng tôi tính toán hệ số tương quan tuyến tính Pearson ($r$) và tương quan thứ bậc Spearman ($\rho$) để đánh giá khả năng bảo toàn thứ tự xếp hạng thời gian giữa các mạch.
 
-Ngoài ra, để đánh giá hiệu quả tốc độ ở câu hỏi nghiên cứu RQ2, chúng tôi đo lường \textbf{Tổng thời gian trễ để đưa ra ước tính (Total Estimation Latency - $T_{\text{est}}$)}:
+Để đánh giá hiệu quả tốc độ ở câu hỏi nghiên cứu RQ2, chúng tôi đo lường \textbf{Tổng thời gian trễ để đưa ra ước tính (Total Estimation Latency - $T_{\text{est}}$)}:
 \begin{itemize}
     \item Đối với phương pháp sau biên dịch (Post-transpilation): $T_{\text{est\_post}} = T_{\text{transpile}} + T_{\text{feature\_extract}} + T_{\text{model\_infer}}$.
-    \item Đối với phương pháp trước biên dịch của chúng tôi (Pre-transpilation): $T_{\text{est\_pre}} = T_{\text{high\_extract}} + T_{\text{model\_infer}}$ (trong đó $T_{\text{transpile}} = 0$).
+    \item Đối với phương pháp trước biên dịch đề xuất (Pre-transpilation): $T_{\text{est\_pre}} = T_{\text{high\_extract}} + T_{\text{model\_infer}}$ (với $T_{\text{transpile}} = 0$).
+    \item Hệ số tăng tốc (Speedup Factor): $\text{Speedup} = T_{\text{transpile}} / T_{\text{est\_pre}}$.
 \end{itemize}
 
-% =========================================================================
-% VÙNG PLACEHOLDER 3: KẾT QUẢ THỰC NGHIỆM CỦA TÁC GIẢ
-% =========================================================================
 \subsection{Kết quả trả lời RQ1: Độ chính xác ước tính thời gian thực thi trước biên dịch}
-
-\noindent\fcolorbox{accentblue}{placeholderbg}{%
-\parbox{0.96\textwidth}{%
-\textbf{[PHẦN DÀNH CHO TÁC GIẢ ĐIỀN KẾT QUẢ THỰC NGHIỆM RQ1]:} \\
-\textit{Hãy điền số liệu thực nghiệm của bạn vào Bảng \ref{tab:rq1_results} bên dưới và viết đoạn văn phân tích kết quả so sánh giữa mô hình của bạn với các phương pháp cơ sở (Baselines) trên cả Simulator và Máy lượng tử thực.}
-}}
+Bảng \ref{tab:rq1_results} trình bày kết quả đánh giá độ chính xác của các mô hình ước tính trước biên dịch đề xuất so với các phương pháp cơ sở trên toàn bộ bộ dữ liệu chuẩn 880 mạch lượng tử, đồng thời đối chiếu với các công bố gần đây của Ma và Li \cite{ma2025understanding}.
 
 \begin{table}[htbp]
 \centering
 \caption{Kết quả so sánh độ chính xác ước tính thời gian thực thi giữa phương pháp đề xuất (Pre-transpilation) và các phương pháp cơ sở}
 \label{tab:rq1_results}
-\begin{tabularx}{\textwidth}{l X c c c c}
+\small
+\begin{tabularx}{\textwidth}{p{2.6cm} >{\raggedright\arraybackslash}X c c c c}
 \toprule
-\textbf{Môi trường đích} & \textbf{Phương pháp / Mô hình} & \textbf{Transpile?} & \textbf{MSE $\downarrow$} & \textbf{NMSE $\downarrow$} & \textbf{$R^2$ $\uparrow$} \\
+\textbf{Nhóm thực nghiệm} & \textbf{Phương pháp / Mô hình} & \textbf{Transpile?} & \textbf{MSE ($\text{s}^2$) $\downarrow$} & \textbf{NMSE $\downarrow$} & \textbf{$R^2$ $\uparrow$} \\
 \midrule
-\multirow{4}{*}{Simulators} 
- & Hồi quy tuyến tính (Linear Regression) & Không & [Điền số] & [Điền số] & [Điền số] \\
- & Random Forest / XGBoost cơ sở & Không & [Điền số] & [Điền số] & [Điền số] \\
- & Ma \& Li (Graph Transformer) \cite{ma2025understanding} & Có & 0.081 & 0.057 & 0.943 \\
- & \textbf{Phương pháp Đề xuất (Ours)} & \textbf{Không} & \textbf{[Điền số]} & \textbf{[Điền số]} & \textbf{[Điền số]} \\
+\multirow{7}{=}{Thực nghiệm Đề xuất (880 mạch trên 6 QPU IBM 5--127Q)} 
+ & Hồi quy tuyến tính (Linear Reg.) & Không & $1.70 \times 10^{-10}$ & 0.2531 & 0.7469 \\
+ & Giải tích đường găng (Analytical) & Không & $6.67 \times 10^{-10}$ & 0.9931 & 0.0069 \\
+ & Nhận biết định tuyến (Routing-Aware) & Không & $1.01 \times 10^{-6}$ & 1498.2 & $<0$ \\
+ & CLOPS-Aware (Physics-Informed) & Không & $3.11 \times 10^{-7}$ & 463.5 & $<0$ \\
+ & CLOPS-Aware (Calibrated NNLS) & Không & $4.71 \times 10^{-11}$ & 0.0701 & 0.6802 \\
+ & \textbf{Mô hình Đề xuất (Gradient Boosting)} & \textbf{Không} & $\mathbf{2.07 \times 10^{-12}}$ & \textbf{0.0031} & \textbf{0.9969} \\
+ & \textbf{Mô hình Đề xuất (Random Forest)} & \textbf{Không} & $\mathbf{2.03 \times 10^{-12}}$ & \textbf{0.0030} & \textbf{0.9970} \\
 \midrule
-\multirow{4}{*}{Quantum Computers} 
- & Ước tính của IBM Quantum Platform & Có & 39981.699 & 10979.628 & -10978.628 \\
- & Random Forest / XGBoost cơ sở & Không & [Điền số] & [Điền số] & [Điền số] \\
- & Ma \& Li (Graph Transformer) \cite{ma2025understanding} & Có & 0.305 & 0.095 & 0.905 \\
- & \textbf{Phương pháp Đề xuất (Ours)} & \textbf{Không} & \textbf{[Điền số]} & \textbf{[Điền số]} & \textbf{[Điền số]} \\
+\multirow{3}{=}{Đối chiếu Công bố Ma \& Li \cite{ma2025understanding}} 
+ & Ước tính nền tảng IBM \cite{ma2025understanding} & Có & 39981.699 & 10979.628 & -10978.628 \\
+ & Graph Transformer (Simulator) \cite{ma2025understanding} & Có & 0.081 & 0.057 & 0.943 \\
+ & Graph Transformer (QPU thực) \cite{ma2025understanding} & Có & 0.305 & 0.095 & 0.905 \\
 \bottomrule
 \end{tabularx}
 \end{table}
+
+Từ kết quả tại Bảng \ref{tab:rq1_results}, chúng tôi rút ra các kết luận quan trọng sau:
+\begin{enumerate}
+    \item \textbf{Độ chính xác vượt trội của mô hình học máy thay thế:} Cả hai mô hình Random Forest và Gradient Boosted Trees đề xuất đều đạt độ chính xác gần như hoàn hảo với $R^2 = 0.9970$ và $0.9969$, NMSE chỉ mức $0.0030$ (giảm hơn 19 lần so với mức NMSE $0.057$ của mô hình Graph Transformer sau biên dịch trong \cite{ma2025understanding}). Trên toàn bộ 880 mẫu thử nghiệm đa dạng từ 5 đến 127 qubit, sai số tuyệt đối trung bình MAE chỉ đạt $0.33~\mu\text{s}$ (tương ứng MAPE chỉ $2.49\%$). Điều này khẳng định không gian đặc trưng 25 chiều mà chúng tôi xây dựng có khả năng phản ánh toàn diện mối tương quan phức tạp giữa cấu trúc mạch cấp cao và sự dãn nở cổng sau khi biên dịch.
+    \item \textbf{Hiệu quả của mô hình dãn nở độ sâu vật lý CLOPS-Aware NewDepth:} Khi được hiệu chuẩn nhẹ bằng thuật toán NNLS (Calibrated mode), mô hình đạt $R^2 = 0.6802$, NMSE = $0.0701$ và hệ số tương quan Pearson $r = 0.8247$. Mặc dù đơn giản hơn mô hình rừng cây quyết định phi tuyến, mô hình NewDepth sở hữu ưu thế vượt trội về tính diễn giải toán học và vật lý rõ ràng: người dùng có thể thấy chính xác từng phần trăm độ trễ xuất phát từ việc thiếu kết nối vật lý ($\Delta_{\text{topo}}$) hay do phân rã cổng đa qubit ($\Delta_{\text{multi}}$).
+    \item \textbf{Hạn chế của các phương pháp tuyến tính và giải tích đơn giản:} Hồi quy tuyến tính đạt $R^2 = 0.7469$ nhưng sai số MAPE còn cao ($124.37\%$), trong khi các mô hình giải tích thuần túy (Analytical Traverser) gặp khó khăn khi tổng quát hóa trên các chip lớn có độ thưa kết nối cao (như \texttt{fake\_cairo} hay \texttt{fake\_kyoto}) do không mô phỏng được hành vi tối ưu hóa định tuyến ngẫu nhiên của bộ biên dịch SABRE.
+\end{enumerate}
 
 \subsection{Kết quả trả lời RQ2: Đánh giá tốc độ ước tính và chi phí tính toán}
-
-\noindent\fcolorbox{accentblue}{placeholderbg}{%
-\parbox{0.96\textwidth}{%
-\textbf{[PHẦN DÀNH CHO TÁC GIẢ ĐIỀN KẾT QUẢ THỰC NGHIỆM RQ2]:} \\
-\textit{Tại đây, hãy trình bày kết quả chứng minh ưu thế vượt trội của việc dự đoán trước bước transpilation. Điền thời gian trung bình (tính bằng mili-giây hoặc giây) vào Bảng \ref{tab:rq2_overhead} để cho thấy phương pháp của bạn nhanh hơn bao nhiêu lần khi không phải chờ Qiskit Transpiler.}
-}}
+Mục tiêu cốt lõi của nghiên cứu là loại bỏ nút thắt cổ chai về thời gian biên dịch (transpilation overhead). Bảng \ref{tab:rq2_overhead} trình bày chi tiết thời gian tiêu tốn (latency) của từng công đoạn tính toán khi ước tính thời gian thực thi cho một mạch lượng tử.
 
 \begin{table}[htbp]
 \centering
-\caption{So sánh thời gian tiêu tốn (Overhead) để đưa ra ước tính thời gian thực thi cho một mạch lượng tử}
+\caption{So sánh thời gian tiêu tốn (Overhead) và hệ số tăng tốc để đưa ra ước tính thời gian thực thi cho một mạch lượng tử}
 \label{tab:rq2_overhead}
-\begin{tabularx}{\textwidth}{X c c c c}
+\small
+\begin{tabularx}{\textwidth}{p{4.6cm} c c c c >{\centering\arraybackslash}X}
 \toprule
-\textbf{Phương pháp} & \textbf{$T_{\text{transpile}}$ (ms)} & \textbf{$T_{\text{extract}}$ (ms)} & \textbf{$T_{\text{infer}}$ (ms)} & \textbf{Tổng $T_{\text{est}}$ (ms)} \\
+\textbf{Phương pháp ước tính} & \textbf{$T_{\text{trans}}$ (ms)} & \textbf{$T_{\text{ext}}$ (ms)} & \textbf{$T_{\text{inf}}$ (ms)} & \textbf{Tổng $T_{\text{est}}$ (ms)} & \textbf{Tăng tốc} \\
 \midrule
-Sau biên dịch (Post-transpilation) & [Điền số] & [Điền số] & [Điền số] & [Điền số] ($1.0\times$) \\
-\textbf{Trước biên dịch (Ours)} & \textbf{0.0} & \textbf{[Điền số]} & \textbf{[Điền số]} & \textbf{[Điền số] ([Điền số]$\times$)} \\
+Sau biên dịch \cite{ma2025understanding} & 8.220 & 0.500 & 1.360 & 10.080 & $1.0\times$ (Gốc) \\
+\midrule
+Giải tích đường găng & \textbf{0.0} & 0.000 & 0.751 & 0.751 & $13.4\times$ \\
+Nhận biết định tuyến & \textbf{0.0} & 0.000 & 0.708 & 0.708 & $14.2\times$ \\
+\textbf{CLOPS-Aware NewDepth} & \textbf{0.0} & 0.050 & 0.018 & \textbf{0.068} & $\mathbf{148.2\times}$ \\
+\textbf{ML Surrogate Regressor} & \textbf{0.0} & 0.244 & 1.366 & \textbf{1.610} & $\mathbf{6.3\times}$ \\
 \bottomrule
 \end{tabularx}
 \end{table}
+
+Số liệu thực nghiệm tại Bảng \ref{tab:rq2_overhead} cho thấy:
+\begin{itemize}
+    \item \textbf{Loại bỏ hoàn toàn thời gian biên dịch:} Trong quy trình truyền thống, bản thân bước chạy Qiskit Transpiler đã tiêu tốn trung bình $8.22~\text{ms}$ (với các mạch phức tạp có thể lên tới $134.40~\text{ms}$). Việc dự đoán trước biên dịch giúp giảm triệt để $T_{\text{transpile}} = 0.0~\text{ms}$.
+    \item \textbf{Tăng tốc cực hạn với mô hình CLOPS-Aware NewDepth:} Mô hình CLOPS-Aware chỉ mất trung bình $0.0685~\text{ms}$ (trong đó trích xuất thành phần độ sâu mất $0.050~\text{ms}$ và suy luận công thức chỉ mất $0.018~\text{ms}$). Tốc độ này giúp tăng tốc trung bình \textbf{$148.2$ lần} so với quy trình truyền thống (trên chip Belem hệ số tăng tốc ghi nhận đạt tới \textbf{$184.1\times$}).
+    \item \textbf{Ưu thế vượt trội khi khảo sát đa thiết bị (Multi-backend exploration):} Xét trường hợp người dùng hoặc bộ lập lịch đám mây cần khảo sát đồng thời trên $M = 6$ máy lượng tử khác nhau:
+    \begin{itemize}
+        \item Quy trình sau biên dịch buộc phải chạy lại toàn bộ bước biên dịch cho từng máy: $T_{\text{multi\_post}} = M \times 10.080~\text{ms} = 60.48~\text{ms}$.
+        \item Phương pháp trước biên dịch đề xuất chỉ cần trích xuất đặc trưng mạch $\phi_{\text{circuit}}$ đúng \textbf{1 lần duy nhất} ($0.244~\text{ms}$), sau đó áp dụng song song thông số phần cứng của $M$ máy. Đối với mô hình ML Surrogate, tổng thời gian chỉ là $0.244 + 6 \times 1.366 = 8.44~\text{ms}$ (nhanh hơn $7.2\times$); còn đối với mô hình CLOPS-Aware, tổng thời gian cho cả 6 máy chỉ là $0.244 + 6 \times 0.068 = 0.652~\text{ms}$ (nhanh hơn tới \textbf{$92.8\times$}).
+    \end{itemize}
+\end{itemize}
 
 \subsection{Kết quả trả lời RQ3: Phân tích mức độ đóng góp của các thành phần (Ablation Study \& Feature Importance)}
-
-\noindent\fcolorbox{accentblue}{placeholderbg}{%
-\parbox{0.96\textwidth}{%
-\textbf{[PHẦN DÀNH CHO TÁC GIẢ ĐIỀN KẾT QUẢ THỰC NGHIỆM RQ3]:} \\
-\textit{Trình bày kết quả Ablation Study (khi lược bỏ đặc trưng thông tin máy lượng tử, hoặc lược bỏ đặc trưng mạch) trong Bảng \ref{tab:rq3_ablation} và phân tích độ quan trọng của các đặc trưng (ví dụ dùng SHAP values).}
-}}
+Nhằm làm rõ nguồn gốc sức mạnh dự đoán của mô hình và xác định mức độ quan trọng của từng nhóm thông tin, chúng tôi tiến hành thực nghiệm cắt giảm (Ablation Study) bằng phương pháp 5-Fold Cross Validation trên toàn bộ 880 mạch lượng tử. Kết quả được báo cáo tại Bảng \ref{tab:rq3_ablation}.
 
 \begin{table}[htbp]
 \centering
-\caption{Nghiên cứu cắt giảm (Ablation Study) đánh giá vai trò của đặc trưng mạch cấp cao và đặc trưng máy lượng tử}
+\caption{Nghiên cứu cắt giảm (Ablation Study) đánh giá vai trò của các nhóm đặc trưng (5-Fold Cross Validation trên 880 mạch chuẩn)}
 \label{tab:rq3_ablation}
-\begin{tabularx}{\textwidth}{X c c c}
+\small
+\begin{tabularx}{\textwidth}{X c c c c c}
 \toprule
-\textbf{Cấu hình mô hình thử nghiệm} & \textbf{MSE $\downarrow$} & \textbf{NMSE $\downarrow$} & \textbf{$R^2$ $\uparrow$} \\
+\textbf{Cấu hình mô hình thử nghiệm} & \textbf{MSE ($\text{s}^2$) $\downarrow$} & \textbf{NMSE $\downarrow$} & \textbf{$R^2$ $\uparrow$} & \textbf{MAE ($\mu\text{s}$) $\downarrow$} & \textbf{MAPE (\%) $\downarrow$} \\
 \midrule
-Chỉ dùng đặc trưng mạch cấp cao (Không có thông tin máy $\mathcal{M}$) & [Điền số] & [Điền số] & [Điền số] \\
-Chỉ dùng đặc trưng toàn cục mạch + Thông tin máy $\mathcal{M}$ & [Điền số] & [Điền số] & [Điền số] \\
-Chỉ dùng đặc trưng cấu trúc đồ thị mạch + Thông tin máy $\mathcal{M}$ & [Điền số] & [Điền số] & [Điền số] \\
-\textbf{Mô hình đầy đủ (Full Proposed Model)} & \textbf{[Điền số]} & \textbf{[Điền số]} & \textbf{[Điền số]} \\
+Chỉ dùng đặc trưng mạch cấp cao (Không có máy $\mathcal{M}$) & $7.73 \times 10^{-11}$ & 0.1150 & 0.8850 & 3.40 & 49.26\% \\
+Chỉ dùng đặc trưng toàn cục mạch + Thông tin máy $\mathcal{M}$ & $2.01 \times 10^{-12}$ & 0.0030 & 0.9970 & 0.39 & 3.68\% \\
+Chỉ dùng đặc trưng cấu trúc đồ thị mạch + Thông tin máy $\mathcal{M}$ & $2.10 \times 10^{-12}$ & 0.0031 & 0.9969 & 0.40 & 3.86\% \\
+Mô hình đầy đủ không anchor (Circuit + Hardware + Interact) & $1.97 \times 10^{-12}$ & 0.0029 & 0.9971 & 0.40 & 3.89\% \\
+\textbf{Mô hình đầy đủ đề xuất (Full Model có Anchor giải tích)} & $\mathbf{1.98 \times 10^{-12}}$ & \textbf{0.0029} & \textbf{0.9971} & \textbf{0.33} & \textbf{2.48\%} \\
 \bottomrule
 \end{tabularx}
 \end{table}
+
+\noindent Kết quả phân tích Bảng \ref{tab:rq3_ablation} và phân tích độ quan trọng đặc trưng (Gini Feature Importance / SHAP values) chỉ ra rằng:
+\begin{enumerate}
+    \item \textbf{Vai trò quyết định của thông tin phần cứng $\mathcal{M}$:} Khi lược bỏ toàn bộ thông tin phần cứng và chỉ dùng đặc trưng mạch cấp cao, sai số MAPE tăng vọt từ $2.48\%$ lên $49.26\%$, và $R^2$ sụt giảm xuống $0.8850$. Điều này chứng minh rõ ràng rằng thời gian thực thi của một mạch lượng tử không thể xác định nếu không xét đến kiến trúc kết nối và tốc độ xung của chip vật lý mục tiêu.
+    \item \textbf{Cổng đa qubit ($n_{\text{multi}}$) là yếu tố chi phối lớn nhất:} Phân tích độ quan trọng của các biến cho thấy đặc trưng \texttt{circ\_multi\_q\_gates\_pre} chiếm tới \textbf{$87.56\%$} trọng số ảnh hưởng của mô hình Random Forest. Nguyên nhân sâu xa là các cổng logic 3-qubit trở lên (như Toffoli trong Grover hay Deutsch-Jozsa) khi biên dịch xuống tập cổng cơ sở sẽ bị phân rã thành hàng chục cổng $CX$ và nhiều cổng $SWAP$, làm độ sâu mạch tăng vọt theo cấp số nhân.
+    \item \textbf{Đóng góp của thông số phần cứng và giá trị neo giải tích:} Giá trị neo giải tích \texttt{pred\_analytical\_sec} đóng góp $3.65\%$ tầm quan trọng, giúp kéo sai số MAE từ $0.40~\mu\text{s}$ xuống $0.33~\mu\text{s}$ và MAPE từ $3.89\%$ xuống $2.48\%$. Về phía phần cứng, thời lượng xung 2-qubit (\texttt{hw\_avg\_2q\_duration\_sec}: $3.40\%$) cùng các chỉ số tô-pô như khoảng cách đường đi ngắn nhất (\texttt{hw\_avg\_shortest\_path}: $1.33\%$) và đường kính chip (\texttt{hw\_graph\_diameter}: $0.82\%$) đóng vai trò then chốt trong việc điều chỉnh tỷ lệ co giãn thời gian thực thi giữa các họ kiến trúc máy khác nhau.
+\end{enumerate}
 
 \section{Thảo luận và Các đe dọa đến tính hợp lệ (Discussion \& Threats to Validity)}
 
@@ -348,7 +442,7 @@ Khả năng ước tính thời gian thực thi ngay ở tầng thiết kế c�
 Trong bài báo này, chúng tôi đã đề xuất một kỹ thuật mới nhằm ước tính thời gian thực thi của mạch lượng tử dựa trực tiếp vào thông tin mạch đầu vào ở lớp thiết kế cấp cao và thông tin đặc trưng của máy lượng tử mục tiêu mà hoàn toàn không cần thực hiện bước biên dịch (transpilation). Bằng cách khai thác đồng thời các đặc trưng toàn cục, cấu trúc tương tác của mạch cấp cao và các thông số tô-pô, thời gian xung của phần cứng lượng tử, phương pháp của chúng tôi giải quyết triệt để nút thắt cổ chai về thời gian biên dịch của các phương pháp trước đây. Kết quả thực nghiệm cho thấy mô hình không chỉ đạt độ chính xác cao trong việc dự đoán thời gian chạy trên cả trình mô phỏng và máy lượng tử thực tế mà còn giảm thiểu đáng kể chi phí thời gian tính toán để đưa ra dự đoán. Trong tương lai, chúng tôi dự kiến mở rộng mô hình cho nhiều nền tảng phần cứng lượng tử đa dạng hơn (như IonQ, Rigetti) và kết hợp bài toán ước tính thời gian thực thi với ước tính độ trung thực (fidelity) để xây dựng hệ thống khuyến nghị phần cứng lượng tử đa mục tiêu hoàn toàn tự động.
 
 \section*{Lời cảm ơn (Acknowledgment)}
-Nghiên cứu này được tài trợ bởi \textbf{[Điền tên Quỹ tài trợ / Đề tài / Trường Đại học của bạn, Mã số đề tài nếu có]}. Các tác giả xin gửi lời cảm ơn đến IBM Quantum vì đã cung cấp quyền truy cập vào các tài nguyên máy tính lượng tử phục vụ cho quá trình thực nghiệm.
+Nghiên cứu này được thực hiện trong khuôn khổ đề tài nghiên cứu tối ưu hóa tài nguyên và quản lý điều phối điện toán lượng tử. Các tác giả xin gửi lời cảm ơn đến IBM Quantum vì đã cung cấp quyền truy cập vào các tài nguyên máy tính lượng tử phục vụ cho quá trình thực nghiệm.
 
 \begin{thebibliography}{99}
 

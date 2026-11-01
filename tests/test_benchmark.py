@@ -1,43 +1,39 @@
-"""End-to-end integration test for benchmark runner and visualization."""
+"""Integration test for end-to-end benchmark execution and visualizer."""
 
 import os
-import shutil
+import tempfile
 import pytest
-from qcirc_time_estimator.evaluation.benchmark_runner import BenchmarkRunner, BenchmarkRunConfig
-from qcirc_time_estimator.evaluation.visualizer import plot_benchmark_results
+from qcirc_time_estimator.evaluation import BenchmarkRunner, plot_benchmark_results
+from qcirc_time_estimator.config import ExperimentConfig as BenchmarkRunConfig
 
 
-def test_micro_benchmark_pipeline(tmp_path):
-    out_dir = str(tmp_path / "test_run")
-    config = BenchmarkRunConfig(
-        benchmarks=["ghz"],
-        qubit_range=(2, 3),
-        level="indep",
-        optimization_level=1,
-        output_dir=out_dir,
-    )
+def test_micro_benchmark_pipeline():
+    """Verify execution of full pipeline on a micro suite (2 algorithms, qubits 2..3)."""
+    with tempfile.TemporaryDirectory() as tmpdir:
+        config = BenchmarkRunConfig(
+            mode="benchmark",
+            benchmarks=["ghz", "qft"],
+            qubit_range=(2, 3),
+            optimization_level=1,
+            output_dir=tmpdir,
+        )
 
-    runner = BenchmarkRunner(config)
-    df, metrics = runner.run()
+        runner = BenchmarkRunner(config)
+        df, metrics = runner.run()
 
-    assert len(df) == 2  # ghz n=2 and ghz n=3
-    assert "gt_duration_sec" in df.columns
-    assert "analytical_duration_sec" in df.columns
-    assert "routing_aware_duration_sec" in df.columns
-    assert "ml_regressor_duration_sec" in df.columns
+        assert not df.empty
+        assert len(df) == 4
+        assert "analytical_duration_sec" in df.columns
+        assert "routing_aware_duration_sec" in df.columns
+        assert "clops_depth_duration_sec" in df.columns
 
-    for est in ["analytical", "routing_aware", "ml_regressor"]:
-        assert est in metrics
-        assert "mape_percent" in metrics[est]
-        assert "mae_sec" in metrics[est]
+        # Verify summary metrics
+        assert "analytical" in metrics
+        assert "clops_depth" in metrics
+        assert "mape_percent" in metrics["clops_depth"]
 
-    # Verify CSV file output
-    csv_file = os.path.join(out_dir, "benchmark_results.csv")
-    assert os.path.exists(csv_file)
-
-    # Verify plots generation
-    plot_files = plot_benchmark_results(df, metrics, out_dir)
-    assert len(plot_files) >= 2
-    for p in plot_files:
-        assert os.path.exists(p)
-
+        # Verify visualizer
+        plots = plot_benchmark_results(df, metrics, tmpdir)
+        assert len(plots) >= 2
+        for p in plots:
+            assert os.path.exists(p)

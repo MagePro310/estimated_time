@@ -4,7 +4,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from typing import Dict, Any
 from qiskit import QuantumCircuit
-from ..backends.backend_info import BackendInfo
+from ..backends import BackendInfo
 
 
 @dataclass

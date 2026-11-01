@@ -1,6 +1,12 @@
-"""Ground truth calculation using Qiskit transpiler and scheduling."""
+"""Ground truth execution duration calculation via Qiskit transpile and scheduler."""
 
-from .qiskit_scheduler import GroundTruthResult, compute_exact_duration
+from .scheduler import (
+    GroundTruthResult,
+    compute_exact_duration,
+)
 
-__all__ = ["GroundTruthResult", "compute_exact_duration"]
+__all__ = [
+    "GroundTruthResult",
+    "compute_exact_duration",
+]
 
